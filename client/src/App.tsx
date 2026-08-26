@@ -1,19 +1,18 @@
-import { useState } from 'react'
+import { Route, Routes } from 'react-router-dom'
+import { Layout } from './components/Layout'
+import Browse from './pages/Browse'
+import Home from './pages/Home'
+import ItemDetail from './pages/ItemDetail'
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center gap-4">
-      <h1 className="text-3xl font-semibold">Vite + React + Tailwind</h1>
-      <button
-        type="button"
-        onClick={() => setCount((count) => count + 1)}
-        className="rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
-      >
-        Count is {count}
-      </button>
-    </div>
+    <Routes>
+      <Route element={<Layout />}>
+        <Route index element={<Home />} />
+        <Route path="browse" element={<Browse />} />
+        <Route path="items/:id" element={<ItemDetail />} />
+      </Route>
+    </Routes>
   )
 }
 

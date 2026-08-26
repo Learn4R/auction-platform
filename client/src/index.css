@@ -1,1 +1,22 @@
 @import "tailwindcss";
+
+@theme {
+  --color-royal: #173b70;
+  --color-deepblue: #234f8c;
+  --color-gold: #c9a227;
+  --color-champagne: #ddbe63;
+  --color-ivory: #faf9f5;
+  --color-charcoal: #20242a;
+  --color-green: #16855b;
+  --color-red: #c83b3b;
+
+  --font-display: "Newsreader", serif;
+  --font-body: "Inter", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+}
+
+body {
+  background: var(--color-ivory);
+  color: var(--color-charcoal);
+  font-family: var(--font-body);
+}
