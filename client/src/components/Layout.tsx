@@ -36,6 +36,11 @@ export function Layout() {
             <NavLink to="/browse" className={navLinkClass}>
               Browse
             </NavLink>
+            {user && (
+              <NavLink to="/orders" className={navLinkClass}>
+                My Orders
+              </NavLink>
+            )}
             {user?.role === 'seller' && (
               <>
                 <NavLink to="/sell" className={navLinkClass}>

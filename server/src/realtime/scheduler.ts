@@ -2,6 +2,7 @@ import { prisma } from '../lib/prisma.js'
 import { getIO } from './io.js'
 
 const CHECK_INTERVAL_MS = 5_000
+const BUYER_PREMIUM_RATE = 0.1
 
 async function endExpiredAuctions() {
   const now = new Date()
@@ -27,6 +28,22 @@ async function endExpiredAuctions() {
       const winner = winningBid
         ? await tx.user.findUnique({ where: { id: winningBid.userId }, select: { id: true, name: true } })
         : null
+
+      if (winningBid) {
+        const winningBidAmount = Number(winningBid.amount)
+        const buyerPremium = Math.round(winningBidAmount * BUYER_PREMIUM_RATE * 100) / 100
+        const totalAmount = winningBidAmount + buyerPremium
+
+        await tx.order.create({
+          data: {
+            auctionId: id,
+            buyerId: winningBid.userId,
+            winningBid: winningBidAmount,
+            buyerPremium,
+            totalAmount,
+          },
+        })
+      }
 
       return { auction: updated, winner }
     })

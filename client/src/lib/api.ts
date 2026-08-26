@@ -157,3 +157,55 @@ export function setMaxBid(auctionId: string, amount: number, token: string) {
     { method: 'POST', token, body: { amount } },
   )
 }
+
+export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded'
+export type ShippingStatus = 'processing' | 'shipped' | 'inTransit' | 'delivered'
+
+export interface Order {
+  id: string
+  winningBid: string
+  buyerPremium: string
+  totalAmount: string
+  paymentStatus: PaymentStatus
+  shippingStatus: ShippingStatus
+  razorpayOrderId: string | null
+  createdAt: string
+  auction: { id: string; endTime: string; item: { id: string; title: string; category: { name: string } } }
+}
+
+export interface AdminOrder extends Order {
+  buyer: { id: string; name: string }
+}
+
+export function getOrders(token: string) {
+  return request<Order[]>('/api/orders', { token })
+}
+
+export function createPayment(orderId: string, token: string) {
+  return request<{ razorpayOrderId: string; amount: number; currency: string; keyId: string }>(
+    `/api/orders/${orderId}/create-payment`,
+    { method: 'POST', token },
+  )
+}
+
+export interface RazorpayVerifyPayload {
+  razorpay_order_id: string
+  razorpay_payment_id: string
+  razorpay_signature: string
+}
+
+export function verifyPayment(orderId: string, payload: RazorpayVerifyPayload, token: string) {
+  return request<Order>(`/api/orders/${orderId}/verify-payment`, { method: 'POST', token, body: payload })
+}
+
+export function getAdminOrders(token: string) {
+  return request<AdminOrder[]>('/api/admin/orders', { token })
+}
+
+export function updateShippingStatus(orderId: string, status: ShippingStatus, token: string) {
+  return request<AdminOrder>(`/api/admin/orders/${orderId}/shipping-status`, {
+    method: 'PATCH',
+    token,
+    body: { status },
+  })
+}

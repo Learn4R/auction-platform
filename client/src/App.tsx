@@ -7,6 +7,7 @@ import Home from './pages/Home'
 import ItemDetail from './pages/ItemDetail'
 import Login from './pages/Login'
 import MyListings from './pages/MyListings'
+import Orders from './pages/Orders'
 import Sell from './pages/Sell'
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
         <Route path="browse" element={<Browse />} />
         <Route path="items/:id" element={<ItemDetail />} />
         <Route path="login" element={<Login />} />
+        <Route path="orders" element={<Orders />} />
         <Route
           path="sell"
           element={

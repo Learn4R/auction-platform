@@ -8,6 +8,7 @@ import auctionsRouter from './routes/auctions.js'
 import authRouter from './routes/auth.js'
 import categoriesRouter from './routes/categories.js'
 import itemsRouter from './routes/items.js'
+import ordersRouter from './routes/orders.js'
 import sellerRouter from './routes/seller.js'
 import { initSocket } from './realtime/io.js'
 import { startAuctionScheduler } from './realtime/scheduler.js'
@@ -28,6 +29,7 @@ app.use('/api/categories', categoriesRouter)
 app.use('/api/seller', sellerRouter)
 app.use('/api/admin', adminRouter)
 app.use('/api/auctions', auctionsRouter)
+app.use('/api/orders', ordersRouter)
 
 app.get('/api/admin/ping', authenticate('admin'), (_req, res) => {
   res.json({ message: 'pong (admin only)' })

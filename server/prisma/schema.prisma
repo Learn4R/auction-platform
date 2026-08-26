@@ -33,10 +33,10 @@ enum PaymentStatus {
 }
 
 enum ShippingStatus {
-  pending
+  processing
   shipped
+  inTransit
   delivered
-  cancelled
 }
 
 model User {
@@ -144,7 +144,12 @@ model Order {
   auction        Auction        @relation(fields: [auctionId], references: [id])
   buyerId        String
   buyer          User           @relation("BuyerOrders", fields: [buyerId], references: [id])
-  amount         Decimal        @db.Decimal(10, 2)
+  winningBid     Decimal        @db.Decimal(10, 2)
+  buyerPremium   Decimal        @db.Decimal(10, 2)
+  totalAmount    Decimal        @db.Decimal(10, 2)
   paymentStatus  PaymentStatus  @default(pending)
-  shippingStatus ShippingStatus @default(pending)
+  shippingStatus ShippingStatus @default(processing)
+  razorpayOrderId   String?
+  razorpayPaymentId String?
+  createdAt      DateTime       @default(now())
 }
