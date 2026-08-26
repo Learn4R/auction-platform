@@ -1,12 +1,16 @@
+import { createServer } from 'node:http'
 import 'dotenv/config'
 import cors from 'cors'
 import express from 'express'
 import { authenticate } from './middleware/auth.js'
 import adminRouter from './routes/admin.js'
+import auctionsRouter from './routes/auctions.js'
 import authRouter from './routes/auth.js'
 import categoriesRouter from './routes/categories.js'
 import itemsRouter from './routes/items.js'
 import sellerRouter from './routes/seller.js'
+import { initSocket } from './realtime/io.js'
+import { startAuctionScheduler } from './realtime/scheduler.js'
 
 const app = express()
 const port = process.env.PORT ?? 3000
@@ -23,11 +27,16 @@ app.use('/api/items', itemsRouter)
 app.use('/api/categories', categoriesRouter)
 app.use('/api/seller', sellerRouter)
 app.use('/api/admin', adminRouter)
+app.use('/api/auctions', auctionsRouter)
 
 app.get('/api/admin/ping', authenticate('admin'), (_req, res) => {
   res.json({ message: 'pong (admin only)' })
 })
 
-app.listen(port, () => {
+const httpServer = createServer(app)
+initSocket(httpServer)
+startAuctionScheduler()
+
+httpServer.listen(port, () => {
   console.log(`Server listening on http://localhost:${port}`)
 })

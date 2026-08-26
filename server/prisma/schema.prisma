@@ -47,10 +47,12 @@ model User {
   role      Role     @default(buyer)
   createdAt DateTime @default(now())
 
-  items     Item[]      @relation("SellerItems")
-  bids      Bid[]
-  watchlist Watchlist[]
-  orders    Order[]     @relation("BuyerOrders")
+  items       Item[]      @relation("SellerItems")
+  bids        Bid[]
+  maxBids     MaxBid[]
+  watchlist   Watchlist[]
+  orders      Order[]     @relation("BuyerOrders")
+  wonAuctions Auction[]   @relation("AuctionWinner")
 }
 
 model Category {
@@ -95,9 +97,12 @@ model Auction {
   startTime    DateTime
   endTime      DateTime
   status       AuctionStatus @default(upcoming)
+  winnerId     String?
+  winner       User?         @relation("AuctionWinner", fields: [winnerId], references: [id])
 
-  bids  Bid[]
-  order Order?
+  bids    Bid[]
+  maxBids MaxBid[]
+  order   Order?
 }
 
 model Bid {
@@ -107,7 +112,21 @@ model Bid {
   userId    String
   user      User     @relation(fields: [userId], references: [id])
   amount    Decimal  @db.Decimal(10, 2)
+  isProxy   Boolean  @default(false)
   createdAt DateTime @default(now())
+}
+
+model MaxBid {
+  id        String   @id @default(cuid())
+  auctionId String
+  auction   Auction  @relation(fields: [auctionId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  amount    Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([auctionId, userId])
 }
 
 model Watchlist {

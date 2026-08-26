@@ -19,6 +19,7 @@ export interface AuctionSummary {
   startTime: string
   endTime: string
   status: AuctionStatus
+  winner: { id: string; name: string } | null
   _count: { bids: number }
 }
 
@@ -26,6 +27,7 @@ export interface Bid {
   id: string
   amount: string
   createdAt: string
+  isProxy: boolean
   user: { id: string; name: string }
 }
 
@@ -140,4 +142,18 @@ export function rejectItem(id: string, reason: string, token: string) {
     token,
     body: { reason },
   })
+}
+
+export function placeBid(auctionId: string, amount: number, token: string) {
+  return request<{ currentBid: number; endTime: string; leaderId: string | null }>(
+    `/api/auctions/${auctionId}/bids`,
+    { method: 'POST', token, body: { amount } },
+  )
+}
+
+export function setMaxBid(auctionId: string, amount: number, token: string) {
+  return request<{ amount: number; currentBid: number | null; leaderId: string | null }>(
+    `/api/auctions/${auctionId}/max-bid`,
+    { method: 'POST', token, body: { amount } },
+  )
 }

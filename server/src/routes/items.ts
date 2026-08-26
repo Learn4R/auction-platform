@@ -25,6 +25,7 @@ const itemSummarySelect = {
       startTime: true,
       endTime: true,
       status: true,
+      winner: { select: { id: true, name: true } },
       _count: { select: { bids: true } },
     },
   },
@@ -168,6 +169,7 @@ router.get('/:id', async (req, res) => {
             select: {
               id: true,
               amount: true,
+              isProxy: true,
               createdAt: true,
               user: { select: { id: true, name: true } },
             },

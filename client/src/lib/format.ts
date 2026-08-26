@@ -31,3 +31,17 @@ export function formatCountdown(target: string) {
   if (hours > 0) return `${hours}h ${minutes}m`
   return `${minutes}m`
 }
+
+/** Down-to-the-second countdown, for the live bid panel where anti-snipe timing matters. */
+export function formatCountdownPrecise(target: string) {
+  const diff = new Date(target).getTime() - Date.now()
+  if (diff <= 0) return 'Ended'
+
+  const totalSeconds = Math.floor(diff / 1000)
+  const hours = Math.floor(totalSeconds / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+  const seconds = totalSeconds % 60
+
+  if (hours > 0) return `${hours}h ${String(minutes).padStart(2, '0')}m`
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+}
