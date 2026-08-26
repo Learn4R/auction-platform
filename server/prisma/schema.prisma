@@ -45,6 +45,7 @@ model User {
   email     String   @unique
   password  String
   role      Role     @default(buyer)
+  verified  Boolean  @default(false)
   createdAt DateTime @default(now())
 
   items       Item[]      @relation("SellerItems")
@@ -152,4 +153,10 @@ model Order {
   razorpayOrderId   String?
   razorpayPaymentId String?
   createdAt      DateTime       @default(now())
+}
+
+model PlatformSettings {
+  id                  String   @id @default("singleton")
+  buyerPremiumPercent Decimal  @default(10) @db.Decimal(5, 2)
+  updatedAt           DateTime @updatedAt
 }

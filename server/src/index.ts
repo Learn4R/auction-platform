@@ -2,8 +2,7 @@ import { createServer } from 'node:http'
 import 'dotenv/config'
 import cors from 'cors'
 import express from 'express'
-import { authenticate } from './middleware/auth.js'
-import adminRouter from './routes/admin.js'
+import adminRouter from './routes/admin/index.js'
 import auctionsRouter from './routes/auctions.js'
 import authRouter from './routes/auth.js'
 import categoriesRouter from './routes/categories.js'
@@ -30,10 +29,6 @@ app.use('/api/seller', sellerRouter)
 app.use('/api/admin', adminRouter)
 app.use('/api/auctions', auctionsRouter)
 app.use('/api/orders', ordersRouter)
-
-app.get('/api/admin/ping', authenticate('admin'), (_req, res) => {
-  res.json({ message: 'pong (admin only)' })
-})
 
 const httpServer = createServer(app)
 initSocket(httpServer)

@@ -1,8 +1,8 @@
 import { prisma } from '../lib/prisma.js'
+import { getBuyerPremiumPercent } from '../lib/settings.js'
 import { getIO } from './io.js'
 
 const CHECK_INTERVAL_MS = 5_000
-const BUYER_PREMIUM_RATE = 0.1
 
 async function endExpiredAuctions() {
   const now = new Date()
@@ -30,8 +30,9 @@ async function endExpiredAuctions() {
         : null
 
       if (winningBid) {
+        const buyerPremiumPercent = await getBuyerPremiumPercent(tx)
         const winningBidAmount = Number(winningBid.amount)
-        const buyerPremium = Math.round(winningBidAmount * BUYER_PREMIUM_RATE * 100) / 100
+        const buyerPremium = Math.round(winningBidAmount * (buyerPremiumPercent / 100) * 100) / 100
         const totalAmount = winningBidAmount + buyerPremium
 
         await tx.order.create({

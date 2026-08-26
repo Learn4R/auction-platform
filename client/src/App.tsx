@@ -1,7 +1,13 @@
 import { Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { RequireRole } from './components/RequireRole'
-import Admin from './pages/Admin'
+import AdminLayout from './pages/admin/AdminLayout'
+import AdminApprovals from './pages/admin/Approvals'
+import AdminCategories from './pages/admin/Categories'
+import AdminDashboard from './pages/admin/Dashboard'
+import AdminOrders from './pages/admin/Orders'
+import AdminSellers from './pages/admin/Sellers'
+import AdminSettings from './pages/admin/Settings'
 import Browse from './pages/Browse'
 import Home from './pages/Home'
 import ItemDetail from './pages/ItemDetail'
@@ -39,10 +45,17 @@ function App() {
           path="admin"
           element={
             <RequireRole role="admin">
-              <Admin />
+              <AdminLayout />
             </RequireRole>
           }
-        />
+        >
+          <Route index element={<AdminDashboard />} />
+          <Route path="approvals" element={<AdminApprovals />} />
+          <Route path="orders" element={<AdminOrders />} />
+          <Route path="categories" element={<AdminCategories />} />
+          <Route path="sellers" element={<AdminSellers />} />
+          <Route path="settings" element={<AdminSettings />} />
+        </Route>
       </Route>
     </Routes>
   )

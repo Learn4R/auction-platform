@@ -1,0 +1,18 @@
+import { Router } from 'express'
+import categoriesRouter from './categories.js'
+import itemsRouter from './items.js'
+import ordersRouter from './orders.js'
+import sellersRouter from './sellers.js'
+import settingsRouter from './settings.js'
+import statsRouter from './stats.js'
+
+const router = Router()
+
+router.use('/items', itemsRouter)
+router.use('/orders', ordersRouter)
+router.use('/stats', statsRouter)
+router.use('/settings', settingsRouter)
+router.use('/categories', categoriesRouter)
+router.use('/sellers', sellersRouter)
+
+export default router

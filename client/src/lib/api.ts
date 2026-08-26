@@ -209,3 +209,72 @@ export function updateShippingStatus(orderId: string, status: ShippingStatus, to
     body: { status },
   })
 }
+
+export interface AdminStats {
+  totalUsers: number
+  totalSellers: number
+  verifiedSellers: number
+  liveAuctions: number
+  upcomingAuctions: number
+  completedAuctions: number
+  totalSalesValue: string
+  platformRevenue: string
+  pendingSellerApprovals: number
+  pendingPayments: number
+}
+
+export function getAdminStats(token: string) {
+  return request<AdminStats>('/api/admin/stats', { token })
+}
+
+export function getSettings(token: string) {
+  return request<{ buyerPremiumPercent: string }>('/api/admin/settings', { token })
+}
+
+export function updateSettings(buyerPremiumPercent: number, token: string) {
+  return request<{ buyerPremiumPercent: string }>('/api/admin/settings', {
+    method: 'PATCH',
+    token,
+    body: { buyerPremiumPercent },
+  })
+}
+
+export interface AdminCategory {
+  id: string
+  name: string
+  slug: string
+  itemCount: number
+}
+
+export function getAdminCategories(token: string) {
+  return request<AdminCategory[]>('/api/admin/categories', { token })
+}
+
+export function createCategory(data: { name: string; slug?: string }, token: string) {
+  return request<AdminCategory>('/api/admin/categories', { method: 'POST', token, body: data })
+}
+
+export function updateCategory(id: string, data: { name?: string; slug?: string }, token: string) {
+  return request<AdminCategory>(`/api/admin/categories/${id}`, { method: 'PATCH', token, body: data })
+}
+
+export function deleteCategory(id: string, token: string) {
+  return request<void>(`/api/admin/categories/${id}`, { method: 'DELETE', token })
+}
+
+export interface AdminSeller {
+  id: string
+  name: string
+  email: string
+  verified: boolean
+  createdAt: string
+  itemCount: number
+}
+
+export function getAdminSellers(token: string) {
+  return request<AdminSeller[]>('/api/admin/sellers', { token })
+}
+
+export function toggleSellerVerification(id: string, token: string) {
+  return request<AdminSeller>(`/api/admin/sellers/${id}/verify`, { method: 'PATCH', token })
+}
