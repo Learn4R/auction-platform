@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  buyer
+  seller
+  admin
+}
+
+enum ItemStatus {
+  draft
+  pending
+  approved
+  rejected
+}
+
+enum AuctionStatus {
+  upcoming
+  live
+  ended
+}
+
+enum PaymentStatus {
+  pending
+  paid
+  failed
+  refunded
+}
+
+enum ShippingStatus {
+  pending
+  shipped
+  delivered
+  cancelled
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(buyer)
+  createdAt DateTime @default(now())
+
+  items     Item[]      @relation("SellerItems")
+  bids      Bid[]
+  watchlist Watchlist[]
+  orders    Order[]     @relation("BuyerOrders")
+}
+
+model Category {
+  id   String @id @default(cuid())
+  name String
+  slug String @unique
+
+  items Item[]
+}
+
+model Item {
+  id          String     @id @default(cuid())
+  title       String
+  description String
+  categoryId  String
+  category    Category   @relation(fields: [categoryId], references: [id])
+  year        Int?
+  material    String?
+  condition   String?
+  images      String[]
+  sellerId    String
+  seller      User       @relation("SellerItems", fields: [sellerId], references: [id])
+  status      ItemStatus @default(draft)
+
+  auction   Auction?
+  watchlist Watchlist[]
+}
+
+model Auction {
+  id           String        @id @default(cuid())
+  itemId       String        @unique
+  item         Item          @relation(fields: [itemId], references: [id])
+  startingBid  Decimal       @db.Decimal(10, 2)
+  currentBid   Decimal?      @db.Decimal(10, 2)
+  bidIncrement Decimal       @db.Decimal(10, 2)
+  startTime    DateTime
+  endTime      DateTime
+  status       AuctionStatus @default(upcoming)
+
+  bids  Bid[]
+  order Order?
+}
+
+model Bid {
+  id        String   @id @default(cuid())
+  auctionId String
+  auction   Auction  @relation(fields: [auctionId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  amount    Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+}
+
+model Watchlist {
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+  itemId String
+  item   Item   @relation(fields: [itemId], references: [id])
+
+  @@id([userId, itemId])
+}
+
+model Order {
+  id             String         @id @default(cuid())
+  auctionId      String         @unique
+  auction        Auction        @relation(fields: [auctionId], references: [id])
+  buyerId        String
+  buyer          User           @relation("BuyerOrders", fields: [buyerId], references: [id])
+  amount         Decimal        @db.Decimal(10, 2)
+  paymentStatus  PaymentStatus  @default(pending)
+  shippingStatus ShippingStatus @default(pending)
+}
