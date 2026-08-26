@@ -2,9 +2,11 @@ import 'dotenv/config'
 import cors from 'cors'
 import express from 'express'
 import { authenticate } from './middleware/auth.js'
+import adminRouter from './routes/admin.js'
 import authRouter from './routes/auth.js'
 import categoriesRouter from './routes/categories.js'
 import itemsRouter from './routes/items.js'
+import sellerRouter from './routes/seller.js'
 
 const app = express()
 const port = process.env.PORT ?? 3000
@@ -19,6 +21,8 @@ app.get('/', (_req, res) => {
 app.use('/api/auth', authRouter)
 app.use('/api/items', itemsRouter)
 app.use('/api/categories', categoriesRouter)
+app.use('/api/seller', sellerRouter)
+app.use('/api/admin', adminRouter)
 
 app.get('/api/admin/ping', authenticate('admin'), (_req, res) => {
   res.json({ message: 'pong (admin only)' })

@@ -20,3 +20,18 @@ body {
   color: var(--color-charcoal);
   font-family: var(--font-body);
 }
+
+@layer components {
+  .input {
+    border-radius: 0.5rem;
+    border: 1px solid rgba(23, 59, 112, 0.15);
+    padding: 0.625rem 0.875rem;
+    font-weight: 400;
+    font-family: var(--font-body);
+    background: white;
+  }
+  .input:focus {
+    outline: none;
+    border-color: var(--color-royal);
+  }
+}

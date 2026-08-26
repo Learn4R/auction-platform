@@ -75,6 +75,12 @@ model Item {
   seller      User       @relation("SellerItems", fields: [sellerId], references: [id])
   status      ItemStatus @default(draft)
 
+  proposedStartingBid  Decimal?  @db.Decimal(10, 2)
+  proposedBidIncrement Decimal?  @db.Decimal(10, 2)
+  proposedStartTime    DateTime?
+  proposedEndTime      DateTime?
+  rejectionReason      String?
+
   auction   Auction?
   watchlist Watchlist[]
 }
