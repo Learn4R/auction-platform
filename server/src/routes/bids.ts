@@ -25,6 +25,8 @@ router.get('/mine', authenticate(), async (req, res) => {
       currentBid: true,
       status: true,
       endTime: true,
+      winnerId: true,
+      winner: { select: { id: true, name: true } },
       item: {
         select: {
           id: true,
@@ -45,7 +47,8 @@ router.get('/mine', authenticate(), async (req, res) => {
   const myHighestByAuction = new Map(grouped.map((g) => [g.auctionId, g._max.amount]))
 
   const rows = auctions.map((auction) => {
-    const leaderId = auction.bids[0]?.userId ?? null
+    const leaderId = auction.status === 'ended' ? auction.winnerId : (auction.bids[0]?.userId ?? null)
+    const isWinning = leaderId === userId
     return {
       auctionId: auction.id,
       item: auction.item,
@@ -53,7 +56,9 @@ router.get('/mine', authenticate(), async (req, res) => {
       status: auction.status,
       endTime: auction.endTime,
       myHighestBid: myHighestByAuction.get(auction.id),
-      isWinning: leaderId === userId,
+      isWinning,
+      isLost: auction.status === 'ended' && !isWinning,
+      winner: auction.status === 'ended' ? auction.winner : null,
     }
   })
 

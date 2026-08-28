@@ -21,6 +21,7 @@ import ItemDetail from './pages/ItemDetail'
 import Legal from './pages/Legal'
 import Login from './pages/Login'
 import MyListings from './pages/MyListings'
+import Notifications from './pages/Notifications'
 import Orders from './pages/Orders'
 import Sell from './pages/Sell'
 import Signup from './pages/Signup'
@@ -41,6 +42,7 @@ function App() {
         <Route path="signup" element={<Signup />} />
         <Route path="orders" element={<Orders />} />
         <Route path="dashboard" element={<Dashboard />} />
+        <Route path="notifications" element={<Notifications />} />
         <Route
           path="sell"
           element={

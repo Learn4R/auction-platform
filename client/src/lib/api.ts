@@ -530,10 +530,25 @@ export interface MyBidRow {
   endTime: string
   myHighestBid: string
   isWinning: boolean
+  isLost: boolean
+  winner: { id: string; name: string } | null
 }
 
 export function getMyBids(token: string) {
   return request<MyBidRow[]>('/api/bids/mine', { token })
+}
+
+export interface DashboardOverview {
+  activeBids: number
+  auctionsWon: number
+  auctionsLost: number
+  watchlistCount: number
+  pendingPaymentsCount: number
+  pendingPaymentsTotal: number
+}
+
+export function getDashboardOverview(token: string) {
+  return request<DashboardOverview>('/api/dashboard/overview', { token })
 }
 
 export interface AuditLogEntry {
@@ -572,6 +587,18 @@ export function getNotifications(token: string) {
 
 export function markNotificationRead(id: string, token: string) {
   return request<AppNotification>(`/api/notifications/${id}/read`, { method: 'PATCH', token })
+}
+
+export interface PaginatedNotifications {
+  notifications: AppNotification[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
+}
+
+export function getAllNotifications(page: number, token: string) {
+  return request<PaginatedNotifications>(`/api/notifications/all?page=${page}`, { token })
 }
 
 export type PayoutStatus = 'pending' | 'processing' | 'paid' | 'failed' | 'on_hold'

@@ -8,6 +8,7 @@ import auctionsRouter from './routes/auctions.js'
 import authRouter from './routes/auth.js'
 import bidsRouter from './routes/bids.js'
 import categoriesRouter from './routes/categories.js'
+import dashboardRouter from './routes/dashboard.js'
 import itemsRouter from './routes/items.js'
 import legalRouter from './routes/legal.js'
 import notificationsRouter from './routes/notifications.js'
@@ -46,6 +47,7 @@ app.use('/api/orders', ordersRouter)
 app.use('/api/archive', archiveRouter)
 app.use('/api/watchlist', watchlistRouter)
 app.use('/api/bids', bidsRouter)
+app.use('/api/dashboard', dashboardRouter)
 app.use('/api/notifications', notificationsRouter)
 app.use('/api/legal', legalRouter)
 

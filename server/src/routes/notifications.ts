@@ -14,6 +14,24 @@ router.get('/', authenticate(), async (req, res) => {
   res.json(notifications)
 })
 
+router.get('/all', authenticate(), async (req, res) => {
+  const page = Math.max(1, Number(req.query.page) || 1)
+  const pageSize = 20
+  const userId = req.user!.id
+
+  const [notifications, total] = await Promise.all([
+    prisma.notification.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    prisma.notification.count({ where: { userId } }),
+  ])
+
+  res.json({ notifications, total, page, pageSize, totalPages: Math.ceil(total / pageSize) })
+})
+
 router.patch<{ id: string }>('/:id/read', authenticate(), async (req, res) => {
   const notification = await prisma.notification.findUnique({ where: { id: req.params.id } })
 
