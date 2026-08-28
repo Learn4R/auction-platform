@@ -8,33 +8,56 @@ const router = Router()
 
 router.get('/', authenticate('admin'), async (_req, res) => {
   const settings = await getPlatformSettings(prisma)
-  res.json({ buyerPremiumPercent: settings.buyerPremiumPercent })
+  res.json({
+    buyerPremiumPercent: settings.buyerPremiumPercent,
+    sellerCommissionPercent: settings.sellerCommissionPercent,
+  })
 })
 
 router.patch('/', authenticate('admin'), async (req, res) => {
-  const { buyerPremiumPercent } = req.body ?? {}
-  const value = Number(buyerPremiumPercent)
+  const { buyerPremiumPercent, sellerCommissionPercent } = req.body ?? {}
 
-  if (!Number.isFinite(value) || value < 0 || value > 100) {
-    res.status(400).json({ error: 'buyerPremiumPercent must be a number between 0 and 100' })
+  const before = await getPlatformSettings(prisma)
+  const data: { buyerPremiumPercent?: number; sellerCommissionPercent?: number } = {}
+  const changes: string[] = []
+
+  if (buyerPremiumPercent !== undefined) {
+    const value = Number(buyerPremiumPercent)
+    if (!Number.isFinite(value) || value < 0 || value > 100) {
+      res.status(400).json({ error: 'buyerPremiumPercent must be a number between 0 and 100' })
+      return
+    }
+    data.buyerPremiumPercent = value
+    changes.push(`Buyer premium: ${before.buyerPremiumPercent}% → ${value}%`)
+  }
+
+  if (sellerCommissionPercent !== undefined) {
+    const value = Number(sellerCommissionPercent)
+    if (!Number.isFinite(value) || value < 0 || value > 100) {
+      res.status(400).json({ error: 'sellerCommissionPercent must be a number between 0 and 100' })
+      return
+    }
+    data.sellerCommissionPercent = value
+    changes.push(`Seller commission: ${before.sellerCommissionPercent}% → ${value}%`)
+  }
+
+  if (Object.keys(data).length === 0) {
+    res.status(400).json({ error: 'buyerPremiumPercent or sellerCommissionPercent is required' })
     return
   }
 
-  const before = await getPlatformSettings(prisma)
-
   const settings = await prisma.platformSettings.upsert({
     where: { id: 'singleton' },
-    update: { buyerPremiumPercent: value },
-    create: { id: 'singleton', buyerPremiumPercent: value },
+    update: data,
+    create: { id: 'singleton', ...data },
   })
 
-  await logAdminAction(
-    req.user!.id,
-    'update_settings',
-    `Buyer premium: ${before.buyerPremiumPercent}% → ${settings.buyerPremiumPercent}%`,
-  )
+  await logAdminAction(req.user!.id, 'update_settings', changes.join('; '))
 
-  res.json({ buyerPremiumPercent: settings.buyerPremiumPercent })
+  res.json({
+    buyerPremiumPercent: settings.buyerPremiumPercent,
+    sellerCommissionPercent: settings.sellerCommissionPercent,
+  })
 })
 
 export default router

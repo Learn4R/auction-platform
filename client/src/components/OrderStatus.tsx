@@ -1,4 +1,4 @@
-import type { PaymentStatus, ShippingStatus } from '../lib/api'
+import type { PaymentStatus, PayoutStatus, ShippingStatus } from '../lib/api'
 
 const PAYMENT_STYLES: Record<PaymentStatus, string> = {
   pending: 'bg-gold/10 text-[#8a6e18]',
@@ -20,6 +20,32 @@ export function PaymentStatusBadge({ status }: { status: PaymentStatus }) {
       className={`inline-flex items-center rounded-full px-2.5 py-1 font-mono text-[10.5px] font-semibold tracking-wider uppercase ${PAYMENT_STYLES[status]}`}
     >
       {PAYMENT_LABELS[status]}
+    </span>
+  )
+}
+
+const PAYOUT_STYLES: Record<PayoutStatus, string> = {
+  pending: 'bg-gold/10 text-[#8a6e18]',
+  processing: 'bg-deepblue/10 text-deepblue',
+  paid: 'bg-green/10 text-green',
+  failed: 'bg-red/10 text-red',
+  on_hold: 'bg-gray-100 text-gray-500',
+}
+
+const PAYOUT_LABELS: Record<PayoutStatus, string> = {
+  pending: 'Pending',
+  processing: 'Processing',
+  paid: 'Paid',
+  failed: 'Failed',
+  on_hold: 'On Hold',
+}
+
+export function PayoutStatusBadge({ status }: { status: PayoutStatus }) {
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-1 font-mono text-[10.5px] font-semibold tracking-wider uppercase ${PAYOUT_STYLES[status]}`}
+    >
+      {PAYOUT_LABELS[status]}
     </span>
   )
 }

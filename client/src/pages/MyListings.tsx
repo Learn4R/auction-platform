@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ItemStatusBadge } from '../components/ItemStatusBadge'
-import { getMyItems, type ItemSubmission } from '../lib/api'
+import { PayoutStatusBadge } from '../components/OrderStatus'
+import { getMyItems, getSellerPayouts, type ItemSubmission, type SellerPayout } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { formatCurrency, formatDateTime } from '../lib/format'
 
@@ -86,6 +87,74 @@ export default function MyListings() {
                   View live listing →
                 </Link>
               )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      <PayoutsSection />
+    </div>
+  )
+}
+
+function PayoutsSection() {
+  const { token } = useAuth()
+  const [payouts, setPayouts] = useState<SellerPayout[] | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!token) return
+    getSellerPayouts(token)
+      .then(setPayouts)
+      .catch((err) => setError(err.message))
+  }, [token])
+
+  return (
+    <div className="mt-14">
+      <div className="mb-8">
+        <h2 className="mb-2 font-display text-2xl text-royal">My Payouts</h2>
+        <p className="text-sm text-gray-500">Commission and net payout for each sold item, once the buyer pays.</p>
+      </div>
+
+      {error && <p className="text-sm text-red">{error}</p>}
+
+      {!payouts ? (
+        <p className="text-sm text-gray-500">Loading…</p>
+      ) : payouts.length === 0 ? (
+        <div className="rounded-xl border border-royal/10 bg-white py-16 text-center text-gray-500">
+          <h4 className="mb-2 font-display text-lg text-royal">No payouts yet</h4>
+          <p className="text-sm">Payouts appear here once a buyer pays for one of your sold items.</p>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {payouts.map((payout) => (
+            <div key={payout.id} className="rounded-xl border border-royal/10 bg-white p-5">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h3 className="font-display text-lg font-medium text-charcoal">
+                    {payout.order.auction.item.title}
+                  </h3>
+                  <div className="mt-1 font-mono text-[11px] text-gray-500">
+                    Created {formatDateTime(payout.createdAt)}
+                  </div>
+                </div>
+                <PayoutStatusBadge status={payout.status} />
+              </div>
+
+              <div className="mt-4 grid grid-cols-3 gap-4 border-t border-gray-100 pt-4 font-mono text-[13px]">
+                <div>
+                  <div className="text-[10px] text-gray-500 uppercase">Gross (Winning Bid)</div>
+                  <div className="font-semibold text-charcoal">{formatCurrency(payout.grossAmount)}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] text-gray-500 uppercase">Commission Deducted</div>
+                  <div className="font-semibold text-red">−{formatCurrency(payout.commissionAmount)}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] text-gray-500 uppercase">Net Payout</div>
+                  <div className="font-semibold text-royal">{formatCurrency(payout.netAmount)}</div>
+                </div>
+              </div>
             </div>
           ))}
         </div>

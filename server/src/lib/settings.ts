@@ -16,3 +16,8 @@ export async function getBuyerPremiumPercent(client: Client): Promise<number> {
   const settings = await getPlatformSettings(client)
   return Number(settings.buyerPremiumPercent)
 }
+
+export async function getSellerCommissionPercent(client: Client): Promise<number> {
+  const settings = await getPlatformSettings(client)
+  return Number(settings.sellerCommissionPercent)
+}

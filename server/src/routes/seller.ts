@@ -15,4 +15,28 @@ router.get('/items', authenticate('seller'), async (req, res) => {
   res.json(items)
 })
 
+router.get('/payouts', authenticate('seller'), async (req, res) => {
+  const payouts = await prisma.payout.findMany({
+    where: { sellerId: req.user!.id },
+    orderBy: { createdAt: 'desc' },
+    select: {
+      id: true,
+      grossAmount: true,
+      commissionAmount: true,
+      netAmount: true,
+      status: true,
+      createdAt: true,
+      updatedAt: true,
+      order: {
+        select: {
+          id: true,
+          auction: { select: { item: { select: { id: true, title: true } } } },
+        },
+      },
+    },
+  })
+
+  res.json(payouts)
+})
+
 export default router

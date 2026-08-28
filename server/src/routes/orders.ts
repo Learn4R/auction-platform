@@ -3,6 +3,7 @@ import { Router } from 'express'
 import { Prisma } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
 import { getRazorpay } from '../lib/razorpay.js'
+import { getSellerCommissionPercent } from '../lib/settings.js'
 import { authenticate } from '../middleware/auth.js'
 
 const router = Router()
@@ -85,7 +86,10 @@ router.post<{ id: string }>('/:id/verify-payment', authenticate(), async (req, r
     return
   }
 
-  const order = await prisma.order.findUnique({ where: { id: req.params.id } })
+  const order = await prisma.order.findUnique({
+    where: { id: req.params.id },
+    include: { auction: { include: { item: { select: { sellerId: true } } } } },
+  })
   if (!order) {
     res.status(404).json({ error: 'order not found' })
     return
@@ -115,10 +119,33 @@ router.post<{ id: string }>('/:id/verify-payment', authenticate(), async (req, r
     return
   }
 
-  const updated = await prisma.order.update({
-    where: { id: order.id },
-    data: { paymentStatus: 'paid', razorpayPaymentId: razorpay_payment_id },
-    select: orderSelect,
+  const wasAlreadyPaid = order.paymentStatus === 'paid'
+
+  const updated = await prisma.$transaction(async (tx) => {
+    const result = await tx.order.update({
+      where: { id: order.id },
+      data: { paymentStatus: 'paid', razorpayPaymentId: razorpay_payment_id },
+      select: orderSelect,
+    })
+
+    if (!wasAlreadyPaid) {
+      const commissionPercent = await getSellerCommissionPercent(tx)
+      const gross = Number(order.winningBid)
+      const commissionAmount = Math.round(gross * (commissionPercent / 100) * 100) / 100
+      const netAmount = gross - commissionAmount
+
+      await tx.payout.create({
+        data: {
+          sellerId: order.auction.item.sellerId,
+          orderId: order.id,
+          grossAmount: gross,
+          commissionAmount,
+          netAmount,
+        },
+      })
+    }
+
+    return result
   })
 
   res.json(updated)

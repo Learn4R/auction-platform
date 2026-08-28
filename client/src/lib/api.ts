@@ -281,15 +281,23 @@ export function getAdminStats(token: string) {
   return request<AdminStats>('/api/admin/stats', { token })
 }
 
-export function getSettings(token: string) {
-  return request<{ buyerPremiumPercent: string }>('/api/admin/settings', { token })
+export interface PlatformSettingsData {
+  buyerPremiumPercent: string
+  sellerCommissionPercent: string
 }
 
-export function updateSettings(buyerPremiumPercent: number, token: string) {
-  return request<{ buyerPremiumPercent: string }>('/api/admin/settings', {
+export function getSettings(token: string) {
+  return request<PlatformSettingsData>('/api/admin/settings', { token })
+}
+
+export function updateSettings(
+  data: { buyerPremiumPercent?: number; sellerCommissionPercent?: number },
+  token: string,
+) {
+  return request<PlatformSettingsData>('/api/admin/settings', {
     method: 'PATCH',
     token,
-    body: { buyerPremiumPercent },
+    body: data,
   })
 }
 
@@ -425,4 +433,34 @@ export function getNotifications(token: string) {
 
 export function markNotificationRead(id: string, token: string) {
   return request<AppNotification>(`/api/notifications/${id}/read`, { method: 'PATCH', token })
+}
+
+export type PayoutStatus = 'pending' | 'processing' | 'paid' | 'failed' | 'on_hold'
+
+export interface SellerPayout {
+  id: string
+  grossAmount: string
+  commissionAmount: string
+  netAmount: string
+  status: PayoutStatus
+  createdAt: string
+  updatedAt: string
+  order: { id: string; auction: { item: { id: string; title: string } } }
+}
+
+export function getSellerPayouts(token: string) {
+  return request<SellerPayout[]>('/api/seller/payouts', { token })
+}
+
+export interface AdminPayout extends SellerPayout {
+  seller: { id: string; name: string; email: string }
+  order: SellerPayout['order'] & { buyer: { id: string; name: string } }
+}
+
+export function getAdminPayouts(token: string) {
+  return request<AdminPayout[]>('/api/admin/payouts', { token })
+}
+
+export function updatePayoutStatus(id: string, status: PayoutStatus, token: string) {
+  return request<AdminPayout>(`/api/admin/payouts/${id}/status`, { method: 'PATCH', token, body: { status } })
 }

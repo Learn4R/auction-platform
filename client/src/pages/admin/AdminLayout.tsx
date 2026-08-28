@@ -4,6 +4,7 @@ const NAV_ITEMS = [
   { to: '/admin', label: 'Dashboard', end: true },
   { to: '/admin/approvals', label: 'Pending Approvals' },
   { to: '/admin/orders', label: 'Orders' },
+  { to: '/admin/payouts', label: 'Payouts Ledger' },
   { to: '/admin/categories', label: 'Categories' },
   { to: '/admin/sellers', label: 'Sellers' },
   { to: '/admin/settings', label: 'Settings' },

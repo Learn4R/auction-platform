@@ -7,6 +7,7 @@ import AdminAuditLog from './pages/admin/AuditLog'
 import AdminCategories from './pages/admin/Categories'
 import AdminDashboard from './pages/admin/Dashboard'
 import AdminOrders from './pages/admin/Orders'
+import AdminPayouts from './pages/admin/Payouts'
 import AdminSellers from './pages/admin/Sellers'
 import AdminSettings from './pages/admin/Settings'
 import Archive from './pages/Archive'
@@ -59,6 +60,7 @@ function App() {
           <Route index element={<AdminDashboard />} />
           <Route path="approvals" element={<AdminApprovals />} />
           <Route path="orders" element={<AdminOrders />} />
+          <Route path="payouts" element={<AdminPayouts />} />
           <Route path="categories" element={<AdminCategories />} />
           <Route path="sellers" element={<AdminSellers />} />
           <Route path="settings" element={<AdminSettings />} />
