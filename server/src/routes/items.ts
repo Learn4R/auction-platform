@@ -52,6 +52,16 @@ export const itemSummarySelect = {
   year: true,
   material: true,
   condition: true,
+  denomination: true,
+  mint: true,
+  rulerAuthority: true,
+  period: true,
+  weight: true,
+  diameter: true,
+  grade: true,
+  certificateNumber: true,
+  gradingCompany: true,
+  provenance: true,
   images: true,
   status: true,
   category: { select: { id: true, name: true, slug: true } },
@@ -119,8 +129,28 @@ router.post('/', authenticate(), handleImageUpload, async (req, res) => {
     }
   }
 
-  const { title, description, categoryId, year, material, condition, startingBid, bidIncrement, startTime, endTime } =
-    req.body ?? {}
+  const {
+    title,
+    description,
+    categoryId,
+    year,
+    material,
+    condition,
+    denomination,
+    mint,
+    rulerAuthority,
+    period,
+    weight,
+    diameter,
+    grade,
+    certificateNumber,
+    gradingCompany,
+    provenance,
+    startingBid,
+    bidIncrement,
+    startTime,
+    endTime,
+  } = req.body ?? {}
   const files = (req.files as Express.Multer.File[] | undefined) ?? []
 
   if (typeof title !== 'string' || !title.trim()) {
@@ -191,6 +221,16 @@ router.post('/', authenticate(), handleImageUpload, async (req, res) => {
         year: yearNum,
         material: material || null,
         condition: condition || null,
+        denomination: denomination || null,
+        mint: mint || null,
+        rulerAuthority: rulerAuthority || null,
+        period: period || null,
+        weight: weight || null,
+        diameter: diameter || null,
+        grade: grade || null,
+        certificateNumber: certificateNumber || null,
+        gradingCompany: gradingCompany || null,
+        provenance: provenance || null,
         images: uploaded.map((u) => u.url),
         sellerId: req.user!.id,
         status: 'pending',

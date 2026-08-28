@@ -103,18 +103,28 @@ model Category {
 }
 
 model Item {
-  id          String     @id @default(cuid())
-  title       String
-  description String
-  categoryId  String
-  category    Category   @relation(fields: [categoryId], references: [id])
-  year        Int?
-  material    String?
-  condition   String?
-  images      String[]
-  sellerId    String
-  seller      User       @relation("SellerItems", fields: [sellerId], references: [id])
-  status      ItemStatus @default(draft)
+  id                String     @id @default(cuid())
+  title             String
+  description       String
+  categoryId        String
+  category          Category   @relation(fields: [categoryId], references: [id])
+  year              Int?
+  material          String?
+  condition         String?
+  denomination      String?
+  mint              String?
+  rulerAuthority    String?
+  period            String?
+  weight            String?
+  diameter          String?
+  grade             String?
+  certificateNumber String?
+  gradingCompany    String?
+  provenance        String?
+  images            String[]
+  sellerId          String
+  seller            User       @relation("SellerItems", fields: [sellerId], references: [id])
+  status            ItemStatus @default(draft)
 
   proposedStartingBid  Decimal?  @db.Decimal(10, 2)
   proposedBidIncrement Decimal?  @db.Decimal(10, 2)

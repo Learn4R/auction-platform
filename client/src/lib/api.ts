@@ -42,6 +42,16 @@ export interface ItemSummary {
   year: number | null
   material: string | null
   condition: string | null
+  denomination: string | null
+  mint: string | null
+  rulerAuthority: string | null
+  period: string | null
+  weight: string | null
+  diameter: string | null
+  grade: string | null
+  certificateNumber: string | null
+  gradingCompany: string | null
+  provenance: string | null
   images: string[]
   status: ItemStatus
   category: { id: string; name: string; slug: string }
@@ -124,6 +134,16 @@ export interface ItemSubmissionInput {
   year: number | null
   material: string
   condition: string
+  denomination: string
+  mint: string
+  rulerAuthority: string
+  period: string
+  weight: string
+  diameter: string
+  grade: string
+  certificateNumber: string
+  gradingCompany: string
+  provenance: string
   images: File[]
   startingBid: number
   bidIncrement: number
@@ -139,6 +159,16 @@ export function submitItem(data: ItemSubmissionInput, token: string) {
   if (data.year !== null) form.set('year', String(data.year))
   form.set('material', data.material)
   form.set('condition', data.condition)
+  form.set('denomination', data.denomination)
+  form.set('mint', data.mint)
+  form.set('rulerAuthority', data.rulerAuthority)
+  form.set('period', data.period)
+  form.set('weight', data.weight)
+  form.set('diameter', data.diameter)
+  form.set('grade', data.grade)
+  form.set('certificateNumber', data.certificateNumber)
+  form.set('gradingCompany', data.gradingCompany)
+  form.set('provenance', data.provenance)
   form.set('startingBid', String(data.startingBid))
   form.set('bidIncrement', String(data.bidIncrement))
   form.set('startTime', data.startTime)

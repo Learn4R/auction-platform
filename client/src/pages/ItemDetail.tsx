@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Emblem } from '../components/Emblem'
+import { ItemSpecs } from '../components/ItemSpecs'
 import { SellerReviews } from '../components/SellerReviews'
 import { StatusBadge } from '../components/StatusBadge'
 import { WatchlistButton } from '../components/WatchlistButton'
@@ -97,14 +98,18 @@ export default function ItemDetail() {
             </div>
           </div>
 
-          <div className="mt-7 grid grid-cols-1 gap-3 border-t border-gray-100 pt-7 sm:grid-cols-2">
-            <SpecRow label="Category" value={item.category.name} />
-            <SpecRow label="Year" value={item.year ?? '—'} />
-            <SpecRow label="Material" value={item.material ?? '—'} />
-            <SpecRow label="Condition" value={item.condition ?? '—'} />
+          <div className="mt-7 border-t border-gray-100 pt-7">
+            <ItemSpecs item={item} />
           </div>
 
           <p className="mt-6 leading-relaxed text-charcoal">{item.description}</p>
+
+          {item.provenance && (
+            <div className="mt-6">
+              <h5 className="mb-2 font-mono text-[11px] tracking-wider text-gray-500 uppercase">Provenance</h5>
+              <p className="leading-relaxed text-charcoal">{item.provenance}</p>
+            </div>
+          )}
 
           <div className="mt-8">
             <h5 className="mb-3.5 font-mono text-[11px] tracking-wider text-gray-500 uppercase">Bid History</h5>
@@ -208,15 +213,6 @@ export default function ItemDetail() {
           )}
         </div>
       </div>
-    </div>
-  )
-}
-
-function SpecRow({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div className="flex justify-between border-b border-dashed border-gray-200 pb-2 text-[13px]">
-      <span className="text-gray-500">{label}</span>
-      <span className="font-semibold">{value}</span>
     </div>
   )
 }
