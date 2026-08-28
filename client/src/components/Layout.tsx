@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
 import { Emblem } from './Emblem'
+import { NotificationBell } from './NotificationBell'
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   `relative py-1.5 text-sm font-medium transition-colors hover:text-royal after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:bg-gold after:transition-all after:duration-200 ${
@@ -63,6 +64,7 @@ export function Layout() {
           <div className="flex items-center gap-4">
             {user ? (
               <>
+                <NotificationBell />
                 <span className="text-sm font-medium text-charcoal">{user.name}</span>
                 <button onClick={handleLogout} className="text-sm font-medium text-gray-500 hover:text-royal">
                   Log Out

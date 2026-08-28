@@ -376,3 +376,23 @@ export interface AuditLogEntry {
 export function getAuditLog(token: string) {
   return request<AuditLogEntry[]>('/api/admin/audit-log', { token })
 }
+
+export type NotificationType = 'outbid' | 'auction_won' | 'listing_approved' | 'listing_rejected' | 'auction_extended'
+
+export interface AppNotification {
+  id: string
+  type: NotificationType
+  message: string
+  read: boolean
+  itemId: string | null
+  auctionId: string | null
+  createdAt: string
+}
+
+export function getNotifications(token: string) {
+  return request<AppNotification[]>('/api/notifications', { token })
+}
+
+export function markNotificationRead(id: string, token: string) {
+  return request<AppNotification>(`/api/notifications/${id}/read`, { method: 'PATCH', token })
+}
