@@ -6,6 +6,7 @@ import AdminApprovals from './pages/admin/Approvals'
 import AdminAuditLog from './pages/admin/AuditLog'
 import AdminCategories from './pages/admin/Categories'
 import AdminDashboard from './pages/admin/Dashboard'
+import AdminLegal from './pages/admin/Legal'
 import AdminOrders from './pages/admin/Orders'
 import AdminPayouts from './pages/admin/Payouts'
 import AdminSellers from './pages/admin/Sellers'
@@ -15,6 +16,7 @@ import Browse from './pages/Browse'
 import Dashboard from './pages/Dashboard'
 import Home from './pages/Home'
 import ItemDetail from './pages/ItemDetail'
+import Legal from './pages/Legal'
 import Login from './pages/Login'
 import MyListings from './pages/MyListings'
 import Orders from './pages/Orders'
@@ -29,6 +31,7 @@ function App() {
         <Route path="browse" element={<Browse />} />
         <Route path="archive" element={<Archive />} />
         <Route path="items/:id" element={<ItemDetail />} />
+        <Route path="legal/:slug" element={<Legal />} />
         <Route path="login" element={<Login />} />
         <Route path="signup" element={<Signup />} />
         <Route path="orders" element={<Orders />} />
@@ -65,6 +68,8 @@ function App() {
           <Route path="sellers" element={<AdminSellers />} />
           <Route path="settings" element={<AdminSettings />} />
           <Route path="audit-log" element={<AdminAuditLog />} />
+          <Route path="legal" element={<AdminLegal />} />
+          <Route path="legal/:slug" element={<AdminLegal />} />
         </Route>
       </Route>
     </Routes>

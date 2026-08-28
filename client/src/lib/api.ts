@@ -464,3 +464,26 @@ export function getAdminPayouts(token: string) {
 export function updatePayoutStatus(id: string, status: PayoutStatus, token: string) {
   return request<AdminPayout>(`/api/admin/payouts/${id}/status`, { method: 'PATCH', token, body: { status } })
 }
+
+export const LEGAL_PAGES: { slug: string; label: string }[] = [
+  { slug: 'terms-and-conditions', label: 'Terms & Conditions' },
+  { slug: 'privacy-policy', label: 'Privacy Policy' },
+  { slug: 'auction-terms', label: 'Auction Terms' },
+  { slug: 'shipping-policy', label: 'Shipping Policy' },
+  { slug: 'authenticity-disclaimer', label: 'Authenticity Disclaimer' },
+]
+
+export interface LegalPage {
+  slug: string
+  title: string
+  content: string
+  updatedAt: string
+}
+
+export function getLegalPage(slug: string) {
+  return request<LegalPage>(`/api/legal/${slug}`)
+}
+
+export function updateLegalPage(slug: string, data: { title?: string; content?: string }, token: string) {
+  return request<LegalPage>(`/api/admin/legal/${slug}`, { method: 'PATCH', token, body: data })
+}

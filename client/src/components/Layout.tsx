@@ -1,4 +1,5 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { LEGAL_PAGES } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { Emblem } from './Emblem'
 import { NotificationBell } from './NotificationBell'
@@ -92,8 +93,15 @@ export function Layout() {
       </main>
 
       <footer className="bg-royal py-10 text-white/70">
-        <div className="mx-auto max-w-[1240px] px-6 text-center text-xs">
-          © 2026 Mudra House. Demo interface — not a live marketplace.
+        <div className="mx-auto flex max-w-[1240px] flex-col items-center gap-4 px-6 text-center text-xs">
+          <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2" aria-label="Legal">
+            {LEGAL_PAGES.map((page) => (
+              <NavLink key={page.slug} to={`/legal/${page.slug}`} className="hover:text-white">
+                {page.label}
+              </NavLink>
+            ))}
+          </nav>
+          <div>© 2026 Mudra House. Demo interface — not a live marketplace.</div>
         </div>
       </footer>
     </div>

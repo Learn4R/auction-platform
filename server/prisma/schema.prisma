@@ -228,6 +228,13 @@ model Review {
   @@index([sellerId, createdAt])
 }
 
+model LegalPage {
+  slug      String   @id
+  title     String
+  content   String
+  updatedAt DateTime @updatedAt
+}
+
 model Payout {
   id               String       @id @default(cuid())
   sellerId         String

@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { to: '/admin/sellers', label: 'Sellers' },
   { to: '/admin/settings', label: 'Settings' },
   { to: '/admin/audit-log', label: 'Audit Log' },
+  { to: '/admin/legal', label: 'Legal Pages' },
 ]
 
 export default function AdminLayout() {

@@ -9,6 +9,7 @@ import authRouter from './routes/auth.js'
 import bidsRouter from './routes/bids.js'
 import categoriesRouter from './routes/categories.js'
 import itemsRouter from './routes/items.js'
+import legalRouter from './routes/legal.js'
 import notificationsRouter from './routes/notifications.js'
 import ordersRouter from './routes/orders.js'
 import sellerRouter from './routes/seller.js'
@@ -46,6 +47,7 @@ app.use('/api/archive', archiveRouter)
 app.use('/api/watchlist', watchlistRouter)
 app.use('/api/bids', bidsRouter)
 app.use('/api/notifications', notificationsRouter)
+app.use('/api/legal', legalRouter)
 
 const httpServer = createServer(app)
 initSocket(httpServer, clientUrl)

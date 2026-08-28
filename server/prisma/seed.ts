@@ -1,7 +1,15 @@
 import bcrypt from 'bcrypt'
 import { prisma } from '../src/lib/prisma.js'
+import { legalPageDefs } from './legalPageContent.js'
 
 async function main() {
+  for (const def of legalPageDefs) {
+    await prisma.legalPage.upsert({
+      where: { slug: def.slug },
+      update: {},
+      create: def,
+    })
+  }
   const seller = await prisma.user.upsert({
     where: { email: 'seller@mudrahouse.in' },
     update: {},
@@ -165,7 +173,7 @@ async function main() {
     })
   }
 
-  console.log(`Seeded ${categoryDefs.length} categories and ${items.length} items.`)
+  console.log(`Seeded ${categoryDefs.length} categories, ${items.length} items, and ${legalPageDefs.length} legal pages.`)
 }
 
 main()
