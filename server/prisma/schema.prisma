@@ -45,6 +45,7 @@ enum NotificationType {
   listing_approved
   listing_rejected
   auction_extended
+  auction_started
 }
 
 enum PayoutStatus {
@@ -75,6 +76,7 @@ model User {
   reviewsWritten  Review[]       @relation("ReviewsWritten")
   reviewsReceived Review[]       @relation("ReviewsReceived")
   payouts         Payout[]       @relation("SellerPayouts")
+  reminders       Reminder[]
 }
 
 model Category {
@@ -127,6 +129,7 @@ model Auction {
   maxBids       MaxBid[]
   order         Order?
   notifications Notification[]
+  reminders     Reminder[]
 }
 
 model Bid {
@@ -226,6 +229,16 @@ model Review {
   createdAt  DateTime @default(now())
 
   @@index([sellerId, createdAt])
+}
+
+model Reminder {
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  auctionId String
+  auction   Auction  @relation(fields: [auctionId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@id([userId, auctionId])
 }
 
 model LegalPage {

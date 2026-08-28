@@ -159,7 +159,7 @@ export default function Home() {
           eyebrow="Mark Your Calendar"
           title="Upcoming Auctions"
           action={
-            <Link to="/browse?status=upcoming" className="text-sm font-semibold text-royal hover:text-deepblue">
+            <Link to="/upcoming" className="text-sm font-semibold text-royal hover:text-deepblue">
               View All Upcoming →
             </Link>
           }

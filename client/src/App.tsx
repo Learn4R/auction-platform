@@ -22,6 +22,7 @@ import MyListings from './pages/MyListings'
 import Orders from './pages/Orders'
 import Sell from './pages/Sell'
 import Signup from './pages/Signup'
+import Upcoming from './pages/Upcoming'
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
       <Route element={<Layout />}>
         <Route index element={<Home />} />
         <Route path="browse" element={<Browse />} />
+        <Route path="upcoming" element={<Upcoming />} />
         <Route path="archive" element={<Archive />} />
         <Route path="items/:id" element={<ItemDetail />} />
         <Route path="legal/:slug" element={<Legal />} />

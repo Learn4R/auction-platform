@@ -76,12 +76,45 @@ async function startDueAuctions() {
   const now = new Date()
   const due = await prisma.auction.findMany({
     where: { status: 'upcoming', startTime: { lte: now } },
-    select: { id: true, startTime: true },
+    select: { id: true },
   })
 
-  for (const { id, startTime } of due) {
-    await prisma.auction.update({ where: { id }, data: { status: 'live' } })
-    getIO().to(id).emit('auction:started', { startTime })
+  for (const { id } of due) {
+    const result = await prisma.$transaction(async (tx) => {
+      // Re-check inside the transaction in case a previous, still-running
+      // tick already flipped this auction.
+      const auction = await tx.auction.findUnique({
+        where: { id },
+        include: { item: { select: { title: true } } },
+      })
+      if (!auction || auction.status !== 'upcoming' || auction.startTime > new Date()) return null
+
+      const updated = await tx.auction.update({ where: { id }, data: { status: 'live' } })
+
+      const reminders = await tx.reminder.findMany({ where: { auctionId: id }, select: { userId: true } })
+      const notifications = []
+      for (const reminder of reminders) {
+        notifications.push(
+          await createNotification(tx, {
+            userId: reminder.userId,
+            type: 'auction_started',
+            message: `"${auction.item.title}" just went live — place your bid now!`,
+            itemId: auction.itemId,
+            auctionId: id,
+          }),
+        )
+      }
+      if (reminders.length > 0) {
+        await tx.reminder.deleteMany({ where: { auctionId: id } })
+      }
+
+      return { auction: updated, notifications }
+    })
+
+    if (result) {
+      getIO().to(id).emit('auction:started', { startTime: result.auction.startTime })
+      if (result.notifications.length > 0) broadcastNotifications(result.notifications)
+    }
   }
 }
 

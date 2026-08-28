@@ -5,6 +5,7 @@ import './index.css'
 import App from './App.tsx'
 import { AuthProvider } from './lib/auth.tsx'
 import { NotificationProvider } from './lib/notifications.tsx'
+import { RemindersProvider } from './lib/reminders.tsx'
 import { WatchlistProvider } from './lib/watchlist.tsx'
 
 createRoot(document.getElementById('root')!).render(
@@ -12,9 +13,11 @@ createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <AuthProvider>
         <WatchlistProvider>
-          <NotificationProvider>
-            <App />
-          </NotificationProvider>
+          <RemindersProvider>
+            <NotificationProvider>
+              <App />
+            </NotificationProvider>
+          </RemindersProvider>
         </WatchlistProvider>
       </AuthProvider>
     </BrowserRouter>

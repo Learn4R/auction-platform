@@ -389,6 +389,14 @@ export function toggleWatchlist(itemId: string, token: string) {
   return request<{ watchlisted: boolean }>(`/api/watchlist/${itemId}`, { method: 'POST', token })
 }
 
+export function getMyReminders(token: string) {
+  return request<string[]>('/api/auctions/reminders/mine', { token })
+}
+
+export function toggleReminder(auctionId: string, token: string) {
+  return request<{ reminding: boolean }>(`/api/auctions/${auctionId}/remind`, { method: 'POST', token })
+}
+
 export interface MyBidRow {
   auctionId: string
   item: { id: string; title: string; images: string[]; category: { id: string; name: string; slug: string } }
@@ -415,7 +423,13 @@ export function getAuditLog(token: string) {
   return request<AuditLogEntry[]>('/api/admin/audit-log', { token })
 }
 
-export type NotificationType = 'outbid' | 'auction_won' | 'listing_approved' | 'listing_rejected' | 'auction_extended'
+export type NotificationType =
+  | 'outbid'
+  | 'auction_won'
+  | 'listing_approved'
+  | 'listing_rejected'
+  | 'auction_extended'
+  | 'auction_started'
 
 export interface AppNotification {
   id: string
