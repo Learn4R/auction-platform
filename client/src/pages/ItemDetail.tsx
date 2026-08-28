@@ -235,7 +235,37 @@ export default function ItemDetail() {
         </div>
 
         <div>
-          {auction ? (
+          {auction?.status === 'ended' ? (
+            <div className="sticky top-24 rounded-xl border border-royal/10 bg-white p-6 shadow-[0_1px_2px_rgba(23,59,112,0.04),0_8px_24px_-12px_rgba(23,59,112,0.14)]">
+              <div className="mb-5">
+                <div className="font-mono text-[9.5px] tracking-wider text-gray-500 uppercase">Final Sale Price</div>
+                <div className="font-mono text-[38px] font-semibold text-royal">{formatCurrency(price!)}</div>
+              </div>
+
+              <div className="mb-5 grid grid-cols-2 gap-2.5">
+                <div className="rounded-lg border border-gold/40 bg-white p-3.5">
+                  <div className="mb-1 font-mono text-[9.5px] tracking-wider text-gray-500 uppercase">Total Bids</div>
+                  <div className="font-mono text-base font-semibold text-royal">{auction.bids.length}</div>
+                </div>
+                <div className="rounded-lg border border-gold/40 bg-white p-3.5">
+                  <div className="mb-1 font-mono text-[9.5px] tracking-wider text-gray-500 uppercase">Starting Bid</div>
+                  <div className="font-mono text-base font-semibold text-royal">
+                    {formatCurrency(auction.startingBid)}
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-lg bg-gray-50 p-3.5 text-center text-[12.5px] text-gray-500">
+                This auction ended {formatDateTime(auction.endTime)}.
+              </div>
+
+              <div className="mt-4 border-t border-gray-100 pt-3.5 text-center">
+                <Link to="/archive" className="text-[12.5px] font-semibold text-royal hover:text-deepblue">
+                  ← Browse the Auction Archive
+                </Link>
+              </div>
+            </div>
+          ) : auction ? (
             <div className="sticky top-24 rounded-xl border border-royal/10 bg-white p-6 shadow-[0_1px_2px_rgba(23,59,112,0.04),0_8px_24px_-12px_rgba(23,59,112,0.14)]">
               {notice && (
                 <div className="mb-4 rounded-lg border border-gold/40 bg-gold/10 p-3 text-[12.5px] font-semibold text-[#8a6e18]">
@@ -273,12 +303,12 @@ export default function ItemDetail() {
                 </div>
               </div>
 
-              {auction.status !== 'live' ? (
+              {auction.status === 'upcoming' ? (
                 <button
                   disabled
                   className="w-full cursor-not-allowed rounded-lg bg-royal px-6 py-3.5 text-[15px] font-semibold text-white opacity-50"
                 >
-                  {auction.status === 'upcoming' ? 'Auction Not Started' : 'Auction Ended'}
+                  Auction Not Started
                 </button>
               ) : !user ? (
                 <Link

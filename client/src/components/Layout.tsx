@@ -36,6 +36,9 @@ export function Layout() {
             <NavLink to="/browse" className={navLinkClass}>
               Browse
             </NavLink>
+            <NavLink to="/archive" className={navLinkClass}>
+              Archive
+            </NavLink>
             {user && (
               <NavLink to="/orders" className={navLinkClass}>
                 My Orders

@@ -3,6 +3,7 @@ import 'dotenv/config'
 import cors from 'cors'
 import express from 'express'
 import adminRouter from './routes/admin/index.js'
+import archiveRouter from './routes/archive.js'
 import auctionsRouter from './routes/auctions.js'
 import authRouter from './routes/auth.js'
 import categoriesRouter from './routes/categories.js'
@@ -29,6 +30,7 @@ app.use('/api/seller', sellerRouter)
 app.use('/api/admin', adminRouter)
 app.use('/api/auctions', auctionsRouter)
 app.use('/api/orders', ordersRouter)
+app.use('/api/archive', archiveRouter)
 
 const httpServer = createServer(app)
 initSocket(httpServer)

@@ -287,3 +287,43 @@ export function getAdminSellers(token: string) {
 export function toggleSellerVerification(id: string, token: string) {
   return request<AdminSeller>(`/api/admin/sellers/${id}/verify`, { method: 'PATCH', token })
 }
+
+export type ArchiveSort = 'recent' | 'priceHigh' | 'priceLow'
+
+export interface ArchiveEntry {
+  id: string
+  title: string
+  description: string
+  year: number | null
+  material: string | null
+  condition: string | null
+  images: string[]
+  category: { id: string; name: string; slug: string }
+  seller: { id: string; name: string }
+  hammerPrice: string
+  bidsCount: number
+  endedAt: string
+}
+
+export interface ArchiveFilters {
+  category?: string
+  search?: string
+  minPrice?: number
+  maxPrice?: number
+  dateFrom?: string
+  dateTo?: string
+  sort?: ArchiveSort
+}
+
+export function getArchive(filters: ArchiveFilters = {}) {
+  const params = new URLSearchParams()
+  if (filters.category) params.set('category', filters.category)
+  if (filters.search) params.set('search', filters.search)
+  if (filters.minPrice !== undefined) params.set('minPrice', String(filters.minPrice))
+  if (filters.maxPrice !== undefined) params.set('maxPrice', String(filters.maxPrice))
+  if (filters.dateFrom) params.set('dateFrom', filters.dateFrom)
+  if (filters.dateTo) params.set('dateTo', filters.dateTo)
+  if (filters.sort) params.set('sort', filters.sort)
+  const query = params.toString()
+  return request<ArchiveEntry[]>(`/api/archive${query ? `?${query}` : ''}`)
+}

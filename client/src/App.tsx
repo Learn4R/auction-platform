@@ -8,6 +8,7 @@ import AdminDashboard from './pages/admin/Dashboard'
 import AdminOrders from './pages/admin/Orders'
 import AdminSellers from './pages/admin/Sellers'
 import AdminSettings from './pages/admin/Settings'
+import Archive from './pages/Archive'
 import Browse from './pages/Browse'
 import Home from './pages/Home'
 import ItemDetail from './pages/ItemDetail'
@@ -23,6 +24,7 @@ function App() {
       <Route element={<Layout />}>
         <Route index element={<Home />} />
         <Route path="browse" element={<Browse />} />
+        <Route path="archive" element={<Archive />} />
         <Route path="items/:id" element={<ItemDetail />} />
         <Route path="login" element={<Login />} />
         <Route path="signup" element={<Signup />} />
