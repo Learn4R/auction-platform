@@ -1,10 +1,91 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { createPayment, getOrders, verifyPayment, type Order } from '../lib/api'
+import { createPayment, getOrders, submitReview, verifyPayment, type Order } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { formatCurrency, formatDateTime } from '../lib/format'
 import { loadRazorpayScript, openRazorpayCheckout } from '../lib/razorpay'
 import { PaymentStatusBadge, ShippingProgress } from './OrderStatus'
+import { StarRatingDisplay, StarRatingInput } from './StarRating'
+
+function ReviewSection({ order, onSubmitted }: { order: Order; onSubmitted: (order: Order) => void }) {
+  const { token } = useAuth()
+  const [open, setOpen] = useState(false)
+  const [rating, setRating] = useState(0)
+  const [comment, setComment] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  if (order.review) {
+    return (
+      <div className="mt-5 border-t border-gray-100 pt-4">
+        <div className="mb-1.5 font-mono text-[10px] tracking-wider text-gray-500 uppercase">Your Review</div>
+        <div className="flex items-center gap-2">
+          <StarRatingDisplay rating={order.review.rating} />
+          <span className="font-mono text-[11px] text-gray-500">{formatDateTime(order.review.createdAt)}</span>
+        </div>
+        {order.review.comment && <p className="mt-1.5 text-[13px] text-charcoal">{order.review.comment}</p>}
+      </div>
+    )
+  }
+
+  if (!open) {
+    return (
+      <div className="mt-5 border-t border-gray-100 pt-4">
+        <button
+          onClick={() => setOpen(true)}
+          className="text-[13px] font-semibold text-royal hover:text-deepblue"
+        >
+          Leave a review →
+        </button>
+      </div>
+    )
+  }
+
+  async function handleSubmit() {
+    if (!token || rating < 1) return
+    setBusy(true)
+    setError(null)
+    try {
+      const review = await submitReview(order.id, { rating, comment: comment.trim() || undefined }, token)
+      onSubmitted({ ...order, review })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to submit review')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="mt-5 border-t border-gray-100 pt-4">
+      <div className="mb-1.5 font-mono text-[10px] tracking-wider text-gray-500 uppercase">Leave a Review</div>
+      <StarRatingInput value={rating} onChange={setRating} />
+      <textarea
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+        placeholder="Optional comment about your experience with this seller"
+        rows={2}
+        className="input mt-2.5 w-full resize-none text-[13.5px]"
+      />
+      {error && <p className="mt-1.5 text-[12.5px] text-red">{error}</p>}
+      <div className="mt-2.5 flex gap-2.5">
+        <button
+          onClick={handleSubmit}
+          disabled={busy || rating < 1}
+          className="rounded-lg bg-royal px-4 py-2 text-[13px] font-semibold text-white transition hover:bg-deepblue disabled:opacity-50"
+        >
+          {busy ? 'Submitting…' : 'Submit Review'}
+        </button>
+        <button
+          onClick={() => setOpen(false)}
+          disabled={busy}
+          className="rounded-lg border border-royal/20 px-4 py-2 text-[13px] font-semibold text-charcoal transition hover:bg-gray-50"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  )
+}
 
 export function OrdersPanel() {
   const { token } = useAuth()
@@ -104,12 +185,20 @@ export function OrdersPanel() {
               </div>
 
               {order.paymentStatus === 'paid' ? (
-                <div className="mt-5 border-t border-gray-100 pt-4">
-                  <div className="mb-3 font-mono text-[10px] tracking-wider text-gray-500 uppercase">
-                    Shipping Status
+                <>
+                  <div className="mt-5 border-t border-gray-100 pt-4">
+                    <div className="mb-3 font-mono text-[10px] tracking-wider text-gray-500 uppercase">
+                      Shipping Status
+                    </div>
+                    <ShippingProgress status={order.shippingStatus} />
                   </div>
-                  <ShippingProgress status={order.shippingStatus} />
-                </div>
+                  <ReviewSection
+                    order={order}
+                    onSubmitted={(updated) =>
+                      setOrders((prev) => (prev ? prev.map((o) => (o.id === updated.id ? updated : o)) : prev))
+                    }
+                  />
+                </>
               ) : (
                 <div className="mt-4 border-t border-gray-100 pt-4">
                   <button

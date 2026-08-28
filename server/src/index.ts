@@ -12,6 +12,7 @@ import itemsRouter from './routes/items.js'
 import notificationsRouter from './routes/notifications.js'
 import ordersRouter from './routes/orders.js'
 import sellerRouter from './routes/seller.js'
+import sellersRouter from './routes/sellers.js'
 import watchlistRouter from './routes/watchlist.js'
 import { initSocket } from './realtime/io.js'
 import { startAuctionScheduler } from './realtime/scheduler.js'
@@ -37,6 +38,7 @@ app.use('/api/auth', authRouter)
 app.use('/api/items', itemsRouter)
 app.use('/api/categories', categoriesRouter)
 app.use('/api/seller', sellerRouter)
+app.use('/api/sellers', sellersRouter)
 app.use('/api/admin', adminRouter)
 app.use('/api/auctions', auctionsRouter)
 app.use('/api/orders', ordersRouter)

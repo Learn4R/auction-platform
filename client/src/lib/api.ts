@@ -185,6 +185,13 @@ export function setMaxBid(auctionId: string, amount: number, token: string) {
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded'
 export type ShippingStatus = 'processing' | 'shipped' | 'inTransit' | 'delivered'
 
+export interface OrderReview {
+  id: string
+  rating: number
+  comment: string | null
+  createdAt: string
+}
+
 export interface Order {
   id: string
   winningBid: string
@@ -195,6 +202,7 @@ export interface Order {
   razorpayOrderId: string | null
   createdAt: string
   auction: { id: string; endTime: string; item: { id: string; title: string; category: { name: string } } }
+  review: OrderReview | null
 }
 
 export interface AdminOrder extends Order {
@@ -220,6 +228,28 @@ export interface RazorpayVerifyPayload {
 
 export function verifyPayment(orderId: string, payload: RazorpayVerifyPayload, token: string) {
   return request<Order>(`/api/orders/${orderId}/verify-payment`, { method: 'POST', token, body: payload })
+}
+
+export function submitReview(orderId: string, data: { rating: number; comment?: string }, token: string) {
+  return request<OrderReview>(`/api/orders/${orderId}/review`, { method: 'POST', token, body: data })
+}
+
+export interface SellerReview {
+  id: string
+  rating: number
+  comment: string | null
+  createdAt: string
+  reviewer: { id: string; name: string }
+}
+
+export interface SellerReviews {
+  averageRating: number | null
+  reviewCount: number
+  reviews: SellerReview[]
+}
+
+export function getSellerReviews(sellerId: string) {
+  return request<SellerReviews>(`/api/sellers/${sellerId}/reviews`)
 }
 
 export function getAdminOrders(token: string) {

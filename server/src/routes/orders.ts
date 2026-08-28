@@ -1,5 +1,6 @@
 import crypto from 'node:crypto'
 import { Router } from 'express'
+import { Prisma } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
 import { getRazorpay } from '../lib/razorpay.js'
 import { authenticate } from '../middleware/auth.js'
@@ -23,6 +24,9 @@ const orderSelect = {
         select: { id: true, title: true, category: { select: { name: true } } },
       },
     },
+  },
+  review: {
+    select: { id: true, rating: true, comment: true, createdAt: true },
   },
 }
 
@@ -118,6 +122,61 @@ router.post<{ id: string }>('/:id/verify-payment', authenticate(), async (req, r
   })
 
   res.json(updated)
+})
+
+router.post<{ id: string }>('/:id/review', authenticate(), async (req, res) => {
+  const { rating, comment } = req.body ?? {}
+
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+    res.status(400).json({ error: 'rating must be an integer from 1 to 5' })
+    return
+  }
+  if (comment !== undefined && comment !== null && typeof comment !== 'string') {
+    res.status(400).json({ error: 'comment must be a string' })
+    return
+  }
+
+  const order = await prisma.order.findUnique({
+    where: { id: req.params.id },
+    include: { auction: { include: { item: { select: { sellerId: true } } } }, review: true },
+  })
+
+  if (!order) {
+    res.status(404).json({ error: 'order not found' })
+    return
+  }
+  if (order.buyerId !== req.user!.id) {
+    res.status(403).json({ error: 'this is not your order' })
+    return
+  }
+  if (order.paymentStatus !== 'paid') {
+    res.status(409).json({ error: 'you can only review a paid order' })
+    return
+  }
+  if (order.review) {
+    res.status(409).json({ error: 'this order already has a review' })
+    return
+  }
+
+  try {
+    const review = await prisma.review.create({
+      data: {
+        orderId: order.id,
+        reviewerId: req.user!.id,
+        sellerId: order.auction.item.sellerId,
+        rating,
+        comment: comment || null,
+      },
+      select: { id: true, rating: true, comment: true, createdAt: true },
+    })
+    res.status(201).json(review)
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+      res.status(409).json({ error: 'this order already has a review' })
+      return
+    }
+    throw err
+  }
 })
 
 export default router

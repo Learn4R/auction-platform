@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Emblem } from '../components/Emblem'
+import { SellerReviews } from '../components/SellerReviews'
 import { StatusBadge } from '../components/StatusBadge'
 import { WatchlistButton } from '../components/WatchlistButton'
 import {
@@ -259,6 +260,8 @@ export default function ItemDetail() {
               )}
             </div>
           </div>
+
+          <SellerReviews sellerId={item.seller.id} sellerName={item.seller.name} />
         </div>
 
         <div>

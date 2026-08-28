@@ -56,14 +56,16 @@ model User {
   verified  Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  items         Item[]         @relation("SellerItems")
-  bids          Bid[]
-  maxBids       MaxBid[]
-  watchlist     Watchlist[]
-  orders        Order[]        @relation("BuyerOrders")
-  wonAuctions   Auction[]      @relation("AuctionWinner")
-  adminActions  AdminAction[]
-  notifications Notification[]
+  items           Item[]         @relation("SellerItems")
+  bids            Bid[]
+  maxBids         MaxBid[]
+  watchlist       Watchlist[]
+  orders          Order[]        @relation("BuyerOrders")
+  wonAuctions     Auction[]      @relation("AuctionWinner")
+  adminActions    AdminAction[]
+  notifications   Notification[]
+  reviewsWritten  Review[]       @relation("ReviewsWritten")
+  reviewsReceived Review[]       @relation("ReviewsReceived")
 }
 
 model Category {
@@ -152,19 +154,21 @@ model Watchlist {
 }
 
 model Order {
-  id             String         @id @default(cuid())
-  auctionId      String         @unique
-  auction        Auction        @relation(fields: [auctionId], references: [id])
-  buyerId        String
-  buyer          User           @relation("BuyerOrders", fields: [buyerId], references: [id])
-  winningBid     Decimal        @db.Decimal(10, 2)
-  buyerPremium   Decimal        @db.Decimal(10, 2)
-  totalAmount    Decimal        @db.Decimal(10, 2)
-  paymentStatus  PaymentStatus  @default(pending)
-  shippingStatus ShippingStatus @default(processing)
+  id                String         @id @default(cuid())
+  auctionId         String         @unique
+  auction           Auction        @relation(fields: [auctionId], references: [id])
+  buyerId           String
+  buyer             User           @relation("BuyerOrders", fields: [buyerId], references: [id])
+  winningBid        Decimal        @db.Decimal(10, 2)
+  buyerPremium      Decimal        @db.Decimal(10, 2)
+  totalAmount       Decimal        @db.Decimal(10, 2)
+  paymentStatus     PaymentStatus  @default(pending)
+  shippingStatus    ShippingStatus @default(processing)
   razorpayOrderId   String?
   razorpayPaymentId String?
-  createdAt      DateTime       @default(now())
+  createdAt         DateTime       @default(now())
+
+  review Review?
 }
 
 model PlatformSettings {
@@ -196,4 +200,19 @@ model Notification {
   createdAt DateTime         @default(now())
 
   @@index([userId, createdAt])
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  orderId    String   @unique
+  order      Order    @relation(fields: [orderId], references: [id])
+  reviewerId String
+  reviewer   User     @relation("ReviewsWritten", fields: [reviewerId], references: [id])
+  sellerId   String
+  seller     User     @relation("ReviewsReceived", fields: [sellerId], references: [id])
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  @@index([sellerId, createdAt])
 }
