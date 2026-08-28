@@ -245,7 +245,7 @@ export async function placeBid(auctionId: string, userId: string, amount: number
       tx,
       auctionId,
       auction.itemId,
-      auction.item.title,
+      auction.item.title!,
       outbidUserIds,
       finalExtended,
     )
@@ -316,7 +316,7 @@ export async function setMaxBid(auctionId: string, userId: string, amount: numbe
       tx,
       auctionId,
       auction.itemId,
-      auction.item.title,
+      auction.item.title!,
       cascade.outbidUserIds,
       cascade.extended,
     )

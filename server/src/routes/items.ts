@@ -8,8 +8,8 @@ import { deleteItemImages, uploadItemImage } from '../lib/supabaseStorage.js'
 
 const router = Router()
 
-const MAX_IMAGES = 6
-const MAX_IMAGE_BYTES = 5 * 1024 * 1024
+export const MAX_IMAGES = 6
+export const MAX_IMAGE_BYTES = 5 * 1024 * 1024
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -23,7 +23,7 @@ const upload = multer({
   },
 })
 
-function handleImageUpload(req: Request, res: Response, next: NextFunction) {
+export function handleImageUpload(req: Request, res: Response, next: NextFunction) {
   upload.array('images', MAX_IMAGES)(req, res, (err: unknown) => {
     if (!err) {
       next()
@@ -88,7 +88,25 @@ export const itemWithProposalSelect = {
   proposedStartTime: true,
   proposedEndTime: true,
   rejectionReason: true,
+  changesRequestedNote: true,
 } satisfies Prisma.ItemSelect
+
+type ItemWithAuction = {
+  status: string
+  auction: { status: string; winner: { id: string; name: string } | null } | null
+}
+
+// "Scheduled"/"Live"/"Sold"/"Unsold" for approved items, derived from the
+// existing auction data rather than stored separately.
+export function withDisplayStatus<T extends ItemWithAuction>(item: T): T & { displayStatus: string | null } {
+  let displayStatus: string | null = null
+  if (item.status === 'approved' && item.auction) {
+    if (item.auction.status === 'upcoming') displayStatus = 'Scheduled'
+    else if (item.auction.status === 'live') displayStatus = 'Live'
+    else if (item.auction.status === 'ended') displayStatus = item.auction.winner ? 'Sold' : 'Unsold'
+  }
+  return { ...item, displayStatus }
+}
 
 router.get('/', async (req, res) => {
   const { status, category } = req.query
@@ -117,7 +135,7 @@ router.get('/', async (req, res) => {
     orderBy: { title: 'asc' },
   })
 
-  res.json(items)
+  res.json(items.map(withDisplayStatus))
 })
 
 router.post('/', authenticate(), handleImageUpload, async (req, res) => {
@@ -233,7 +251,7 @@ router.post('/', authenticate(), handleImageUpload, async (req, res) => {
         provenance: provenance || null,
         images: uploaded.map((u) => u.url),
         sellerId: req.user!.id,
-        status: 'pending',
+        status: 'submitted',
         proposedStartingBid: startingBidNum,
         proposedBidIncrement: bidIncrementNum,
         proposedStartTime: startDate,
@@ -278,7 +296,7 @@ router.get('/:id', async (req, res) => {
     return
   }
 
-  res.json(item)
+  res.json(withDisplayStatus(item))
 })
 
 export default router

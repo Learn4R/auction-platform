@@ -2,14 +2,18 @@ import type { ItemStatus } from '../lib/api'
 
 const STYLES: Record<ItemStatus, string> = {
   draft: 'bg-gray-100 text-gray-500',
-  pending: 'bg-gold/10 text-[#8a6e18]',
+  submitted: 'bg-gold/10 text-[#8a6e18]',
+  under_review: 'bg-deepblue/10 text-deepblue',
+  changes_requested: 'bg-red/10 text-red',
   approved: 'bg-green/10 text-green',
   rejected: 'bg-red/10 text-red',
 }
 
 const LABELS: Record<ItemStatus, string> = {
   draft: 'Draft',
-  pending: 'Pending Review',
+  submitted: 'Submitted',
+  under_review: 'Under Review',
+  changes_requested: 'Changes Requested',
   approved: 'Approved',
   rejected: 'Rejected',
 }

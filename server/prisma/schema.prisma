@@ -14,7 +14,9 @@ enum Role {
 
 enum ItemStatus {
   draft
-  pending
+  submitted
+  under_review
+  changes_requested
   approved
   rejected
 }
@@ -104,10 +106,10 @@ model Category {
 
 model Item {
   id                String     @id @default(cuid())
-  title             String
-  description       String
-  categoryId        String
-  category          Category   @relation(fields: [categoryId], references: [id])
+  title             String?
+  description       String?
+  categoryId        String?
+  category          Category?  @relation(fields: [categoryId], references: [id])
   year              Int?
   material          String?
   condition         String?
@@ -131,6 +133,7 @@ model Item {
   proposedStartTime    DateTime?
   proposedEndTime      DateTime?
   rejectionReason      String?
+  changesRequestedNote String?
 
   auction       Auction?
   watchlist     Watchlist[]

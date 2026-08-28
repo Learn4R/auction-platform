@@ -1,7 +1,7 @@
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
 
 export type AuctionStatus = 'upcoming' | 'live' | 'ended'
-export type ItemStatus = 'draft' | 'pending' | 'approved' | 'rejected'
+export type ItemStatus = 'draft' | 'submitted' | 'under_review' | 'changes_requested' | 'approved' | 'rejected'
 export type Role = 'buyer' | 'seller' | 'admin'
 
 export interface Category {
@@ -54,6 +54,7 @@ export interface ItemSummary {
   provenance: string | null
   images: string[]
   status: ItemStatus
+  displayStatus: string | null
   category: { id: string; name: string; slug: string }
   seller: { id: string; name: string }
   auction: AuctionSummary | null
@@ -63,12 +64,16 @@ export interface ItemDetail extends Omit<ItemSummary, 'auction'> {
   auction: AuctionDetail | null
 }
 
-export interface ItemSubmission extends ItemSummary {
+export interface ItemSubmission extends Omit<ItemSummary, 'title' | 'description' | 'category'> {
+  title: string | null
+  description: string | null
+  category: { id: string; name: string; slug: string } | null
   proposedStartingBid: string | null
   proposedBidIncrement: string | null
   proposedStartTime: string | null
   proposedEndTime: string | null
   rejectionReason: string | null
+  changesRequestedNote: string | null
 }
 
 interface RequestOptions {
@@ -182,8 +187,24 @@ export function getMyItems(token: string) {
   return request<ItemSubmission[]>('/api/seller/items', { token })
 }
 
-export function getPendingItems(token: string) {
+export function getSubmittedItems(token: string) {
   return request<ItemSubmission[]>('/api/admin/items/pending', { token })
+}
+
+export function getUnderReviewItems(token: string) {
+  return request<ItemSubmission[]>('/api/admin/items/under-review', { token })
+}
+
+export function markItemUnderReview(id: string, token: string) {
+  return request<ItemSubmission>(`/api/admin/items/${id}/mark-under-review`, { method: 'PATCH', token })
+}
+
+export function requestItemChanges(id: string, note: string, token: string) {
+  return request<ItemSubmission>(`/api/admin/items/${id}/request-changes`, {
+    method: 'PATCH',
+    token,
+    body: { note },
+  })
 }
 
 export function approveItem(id: string, token: string) {
@@ -196,6 +217,80 @@ export function rejectItem(id: string, reason: string, token: string) {
     token,
     body: { reason },
   })
+}
+
+// The wizard's full field set, used for drafts and edits where every field
+// is optional — unlike ItemSubmissionInput's initial full-submit shape.
+export interface ItemDraftInput {
+  title?: string
+  description?: string
+  categoryId?: string
+  year?: number | null
+  material?: string
+  condition?: string
+  denomination?: string
+  mint?: string
+  rulerAuthority?: string
+  period?: string
+  weight?: string
+  diameter?: string
+  grade?: string
+  certificateNumber?: string
+  gradingCompany?: string
+  provenance?: string
+  startingBid?: number
+  bidIncrement?: number
+  startTime?: string
+  endTime?: string
+  newImages: File[]
+  keepImageUrls?: string[]
+}
+
+function buildDraftFormData(data: ItemDraftInput): FormData {
+  const form = new FormData()
+  const setIfDefined = (key: string, value: string | number | null | undefined) => {
+    if (value === undefined) return
+    form.set(key, value === null ? '' : String(value))
+  }
+  setIfDefined('title', data.title)
+  setIfDefined('description', data.description)
+  setIfDefined('categoryId', data.categoryId)
+  setIfDefined('year', data.year)
+  setIfDefined('material', data.material)
+  setIfDefined('condition', data.condition)
+  setIfDefined('denomination', data.denomination)
+  setIfDefined('mint', data.mint)
+  setIfDefined('rulerAuthority', data.rulerAuthority)
+  setIfDefined('period', data.period)
+  setIfDefined('weight', data.weight)
+  setIfDefined('diameter', data.diameter)
+  setIfDefined('grade', data.grade)
+  setIfDefined('certificateNumber', data.certificateNumber)
+  setIfDefined('gradingCompany', data.gradingCompany)
+  setIfDefined('provenance', data.provenance)
+  setIfDefined('startingBid', data.startingBid)
+  setIfDefined('bidIncrement', data.bidIncrement)
+  setIfDefined('startTime', data.startTime)
+  setIfDefined('endTime', data.endTime)
+  if (data.keepImageUrls) form.set('keepImages', JSON.stringify(data.keepImageUrls))
+  for (const file of data.newImages) form.append('images', file)
+  return form
+}
+
+export function saveDraft(data: ItemDraftInput, token: string) {
+  return request<ItemSubmission>('/api/seller/items/draft', { method: 'POST', body: buildDraftFormData(data), token })
+}
+
+export function updateItem(id: string, data: ItemDraftInput, token: string) {
+  return request<ItemSubmission>(`/api/seller/items/${id}`, {
+    method: 'PATCH',
+    body: buildDraftFormData(data),
+    token,
+  })
+}
+
+export function resubmitItem(id: string, token: string) {
+  return request<ItemSubmission>(`/api/seller/items/${id}/resubmit`, { method: 'POST', token })
 }
 
 export function placeBid(auctionId: string, amount: number, token: string) {

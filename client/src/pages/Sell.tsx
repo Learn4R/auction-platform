@@ -1,11 +1,16 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import {
   applyToSell,
   getCategories,
   getMySellerApplication,
+  resubmitItem,
+  saveDraft,
   submitItem,
+  updateItem,
   type Category,
+  type ItemDraftInput,
+  type ItemSubmission,
   type MySellerApplication,
   type SellerApplicationInput,
 } from '../lib/api'
@@ -13,6 +18,7 @@ import { useAuth } from '../lib/auth'
 
 export default function Sell() {
   const { token } = useAuth()
+  const location = useLocation()
   const [status, setStatus] = useState<MySellerApplication | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -28,7 +34,10 @@ export default function Sell() {
   if (error) return <div className="mx-auto max-w-2xl px-6 py-14 text-sm text-red">{error}</div>
   if (!status) return <div className="mx-auto max-w-2xl px-6 py-14 text-sm text-gray-500">Loading…</div>
 
-  if (status.sellerStatus === 'approved') return <ItemSubmissionForm />
+  if (status.sellerStatus === 'approved') {
+    const editItem = (location.state as { editItem?: ItemSubmission } | null)?.editItem ?? null
+    return <ItemSubmissionForm editItem={editItem} />
+  }
 
   return <SellerApplicationGate status={status} onSubmitted={load} />
 }
@@ -201,9 +210,42 @@ const emptyItemForm = {
 
 type ItemForm = typeof emptyItemForm
 
-interface ImagePick {
-  file: File
-  previewUrl: string
+type ImagePick = { kind: 'existing'; url: string } | { kind: 'new'; file: File; previewUrl: string }
+
+function imageSrc(img: ImagePick) {
+  return img.kind === 'existing' ? img.url : img.previewUrl
+}
+
+function toDatetimeLocal(iso: string) {
+  const d = new Date(iso)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+function formFromItem(item: ItemSubmission | null): ItemForm {
+  if (!item) return emptyItemForm
+  return {
+    categoryId: item.category?.id ?? '',
+    title: item.title ?? '',
+    year: item.year ? String(item.year) : '',
+    denomination: item.denomination ?? '',
+    mint: item.mint ?? '',
+    rulerAuthority: item.rulerAuthority ?? '',
+    period: item.period ?? '',
+    material: item.material ?? '',
+    weight: item.weight ?? '',
+    diameter: item.diameter ?? '',
+    description: item.description ?? '',
+    condition: item.condition ?? '',
+    grade: item.grade ?? '',
+    certificateNumber: item.certificateNumber ?? '',
+    gradingCompany: item.gradingCompany ?? '',
+    provenance: item.provenance ?? '',
+    startingBid: item.proposedStartingBid ?? '',
+    bidIncrement: item.proposedBidIncrement ?? '',
+    startTime: item.proposedStartTime ? toDatetimeLocal(item.proposedStartTime) : '',
+    endTime: item.proposedEndTime ? toDatetimeLocal(item.proposedEndTime) : '',
+  }
 }
 
 const WIZARD_STEPS = [
@@ -237,17 +279,23 @@ function validateStep(step: number, form: ItemForm, images: ImagePick[]): string
   return null
 }
 
-function ItemSubmissionForm() {
+function ItemSubmissionForm({ editItem }: { editItem: ItemSubmission | null }) {
   const { token } = useAuth()
+  const isEditing = editItem !== null
   const [categories, setCategories] = useState<Category[]>([])
-  const [form, setForm] = useState<ItemForm>(emptyItemForm)
-  const [images, setImages] = useState<ImagePick[]>([])
+  const [form, setForm] = useState<ItemForm>(() => formFromItem(editItem))
+  const [images, setImages] = useState<ImagePick[]>(() =>
+    (editItem?.images ?? []).map((url): ImagePick => ({ kind: 'existing', url })),
+  )
   const [imageError, setImageError] = useState<string | null>(null)
   const [step, setStep] = useState(1)
   const [stepError, setStepError] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [savingDraft, setSavingDraft] = useState(false)
+  const [draftMessage, setDraftMessage] = useState<string | null>(null)
   const [submittedTitle, setSubmittedTitle] = useState<string | null>(null)
+  const [itemId, setItemId] = useState<string | null>(editItem?.id ?? null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -262,7 +310,7 @@ function ItemSubmissionForm() {
   // Revoke object URLs on unmount to avoid leaking memory.
   useEffect(() => {
     return () => {
-      for (const img of images) URL.revokeObjectURL(img.previewUrl)
+      for (const img of images) if (img.kind === 'new') URL.revokeObjectURL(img.previewUrl)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -293,13 +341,16 @@ function ItemSubmissionForm() {
       return
     }
 
-    setImages((prev) => [...prev, ...picked.map((file) => ({ file, previewUrl: URL.createObjectURL(file) }))])
+    setImages((prev) => [
+      ...prev,
+      ...picked.map((file): ImagePick => ({ kind: 'new', file, previewUrl: URL.createObjectURL(file) })),
+    ])
   }
 
   function removeImage(index: number) {
     setImages((prev) => {
       const target = prev[index]
-      if (target) URL.revokeObjectURL(target.previewUrl)
+      if (target?.kind === 'new') URL.revokeObjectURL(target.previewUrl)
       return prev.filter((_, i) => i !== index)
     })
   }
@@ -319,43 +370,101 @@ function ItemSubmissionForm() {
     setStep((s) => Math.max(s - 1, 1))
   }
 
+  function buildDraftPayload(): ItemDraftInput {
+    return {
+      title: form.title,
+      description: form.description,
+      categoryId: form.categoryId || undefined,
+      year: form.year !== '' ? Number(form.year) : null,
+      material: form.material,
+      condition: form.condition,
+      denomination: form.denomination,
+      mint: form.mint,
+      rulerAuthority: form.rulerAuthority,
+      period: form.period,
+      weight: form.weight,
+      diameter: form.diameter,
+      grade: form.grade,
+      certificateNumber: form.certificateNumber,
+      gradingCompany: form.gradingCompany,
+      provenance: form.provenance,
+      startingBid: form.startingBid !== '' ? Number(form.startingBid) : undefined,
+      bidIncrement: form.bidIncrement !== '' ? Number(form.bidIncrement) : undefined,
+      startTime: form.startTime ? new Date(form.startTime).toISOString() : undefined,
+      endTime: form.endTime ? new Date(form.endTime).toISOString() : undefined,
+      newImages: images.filter((i) => i.kind === 'new').map((i) => i.file),
+      keepImageUrls: images.filter((i) => i.kind === 'existing').map((i) => i.url),
+    }
+  }
+
+  async function handleSaveDraft() {
+    if (!token) return
+    setError(null)
+    setDraftMessage(null)
+    setSavingDraft(true)
+    try {
+      const payload = buildDraftPayload()
+      if (itemId) {
+        await updateItem(itemId, payload, token)
+        setDraftMessage('Progress saved.')
+      } else {
+        const created = await saveDraft(payload, token)
+        setItemId(created.id)
+        setDraftMessage('Saved as draft — find it under Drafts on your dashboard.')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save')
+    } finally {
+      setSavingDraft(false)
+    }
+  }
+
   async function handleSubmit() {
     if (!token) return
     setError(null)
     setSubmitting(true)
     try {
-      const item = await submitItem(
-        {
-          title: form.title,
-          description: form.description,
-          categoryId: form.categoryId,
-          year: form.year ? Number(form.year) : null,
-          material: form.material,
-          condition: form.condition,
-          denomination: form.denomination,
-          mint: form.mint,
-          rulerAuthority: form.rulerAuthority,
-          period: form.period,
-          weight: form.weight,
-          diameter: form.diameter,
-          grade: form.grade,
-          certificateNumber: form.certificateNumber,
-          gradingCompany: form.gradingCompany,
-          provenance: form.provenance,
-          images: images.map((i) => i.file),
-          startingBid: Number(form.startingBid),
-          bidIncrement: Number(form.bidIncrement),
-          startTime: new Date(form.startTime).toISOString(),
-          endTime: new Date(form.endTime).toISOString(),
-        },
-        token,
-      )
-      setSubmittedTitle(item.title)
+      let title: string | null
+      if (itemId) {
+        await updateItem(itemId, buildDraftPayload(), token)
+        const result = await resubmitItem(itemId, token)
+        title = result.title
+      } else {
+        const item = await submitItem(
+          {
+            title: form.title,
+            description: form.description,
+            categoryId: form.categoryId,
+            year: form.year ? Number(form.year) : null,
+            material: form.material,
+            condition: form.condition,
+            denomination: form.denomination,
+            mint: form.mint,
+            rulerAuthority: form.rulerAuthority,
+            period: form.period,
+            weight: form.weight,
+            diameter: form.diameter,
+            grade: form.grade,
+            certificateNumber: form.certificateNumber,
+            gradingCompany: form.gradingCompany,
+            provenance: form.provenance,
+            images: images.filter((i) => i.kind === 'new').map((i) => i.file),
+            startingBid: Number(form.startingBid),
+            bidIncrement: Number(form.bidIncrement),
+            startTime: new Date(form.startTime).toISOString(),
+            endTime: new Date(form.endTime).toISOString(),
+          },
+          token,
+        )
+        title = item.title
+      }
+      setSubmittedTitle(title)
       setForm({ ...emptyItemForm, categoryId: categories[0]?.id ?? '' })
-      for (const img of images) URL.revokeObjectURL(img.previewUrl)
+      for (const img of images) if (img.kind === 'new') URL.revokeObjectURL(img.previewUrl)
       setImages([])
       setImageError(null)
       setStep(1)
+      setItemId(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Submission failed')
     } finally {
@@ -367,10 +476,11 @@ function ItemSubmissionForm() {
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-14">
-      <h1 className="mb-2 font-display text-3xl text-royal">Sell an Item</h1>
+      <h1 className="mb-2 font-display text-3xl text-royal">{isEditing ? 'Edit & Resubmit Item' : 'Sell an Item'}</h1>
       <p className="mb-8 text-sm text-gray-500">
-        Submit a lot for review. Once approved by our team, it goes live for bidding with the auction settings you
-        propose below.
+        {isEditing
+          ? "Update your listing below, then resubmit it for review — or save your progress and come back later."
+          : 'Submit a lot for review. Once approved by our team, it goes live for bidding with the auction settings you propose below.'}
       </p>
 
       {submittedTitle && (
@@ -380,6 +490,9 @@ function ItemSubmissionForm() {
             View my dashboard →
           </Link>
         </div>
+      )}
+      {draftMessage && !submittedTitle && (
+        <div className="mb-6 rounded-lg border border-gold/40 bg-gold/5 p-4 text-sm text-[#8a6e18]">{draftMessage}</div>
       )}
 
       <WizardProgress step={step} />
@@ -439,8 +552,8 @@ function ItemSubmissionForm() {
           <Field label={`Photos (up to ${MAX_IMAGES}, 5MB each)`}>
             <div className="flex flex-wrap gap-3">
               {images.map((img, i) => (
-                <div key={img.previewUrl} className="group relative h-20 w-20 flex-none overflow-hidden rounded-lg border border-royal/15">
-                  <img src={img.previewUrl} alt="" className="h-full w-full object-cover" />
+                <div key={img.kind === 'existing' ? img.url : img.previewUrl} className="group relative h-20 w-20 flex-none overflow-hidden rounded-lg border border-royal/15">
+                  <img src={imageSrc(img)} alt="" className="h-full w-full object-cover" />
                   <button
                     type="button"
                     onClick={() => removeImage(i)}
@@ -536,24 +649,35 @@ function ItemSubmissionForm() {
             ← Back
           </button>
 
-          {step < WIZARD_STEPS.length ? (
+          <div className="flex items-center gap-2.5">
             <button
               type="button"
-              onClick={goNext}
-              className="rounded-lg bg-royal px-6 py-2.5 text-[14px] font-semibold text-white transition hover:bg-deepblue"
+              onClick={handleSaveDraft}
+              disabled={savingDraft}
+              className="rounded-lg border border-royal/20 px-5 py-2.5 text-[14px] font-semibold text-charcoal transition hover:bg-gray-50 disabled:opacity-50"
             >
-              Next →
+              {savingDraft ? 'Saving…' : isEditing ? 'Save Progress' : 'Save as Draft'}
             </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="rounded-lg bg-royal px-6 py-3 text-[15px] font-semibold text-white transition hover:bg-deepblue disabled:opacity-50"
-            >
-              {submitting ? 'Submitting…' : 'Submit for Review'}
-            </button>
-          )}
+
+            {step < WIZARD_STEPS.length ? (
+              <button
+                type="button"
+                onClick={goNext}
+                className="rounded-lg bg-royal px-6 py-2.5 text-[14px] font-semibold text-white transition hover:bg-deepblue"
+              >
+                Next →
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={submitting}
+                className="rounded-lg bg-royal px-6 py-3 text-[15px] font-semibold text-white transition hover:bg-deepblue disabled:opacity-50"
+              >
+                {submitting ? 'Submitting…' : isEditing ? 'Resubmit for Review' : 'Submit for Review'}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -616,8 +740,8 @@ function ReviewStep({ form, images, categoryName }: { form: ItemForm; images: Im
         ) : (
           <div className="flex flex-wrap gap-2.5">
             {images.map((img) => (
-              <div key={img.previewUrl} className="h-16 w-16 flex-none overflow-hidden rounded-lg border border-royal/15">
-                <img src={img.previewUrl} alt="" className="h-full w-full object-cover" />
+              <div key={img.kind === 'existing' ? img.url : img.previewUrl} className="h-16 w-16 flex-none overflow-hidden rounded-lg border border-royal/15">
+                <img src={imageSrc(img)} alt="" className="h-full w-full object-cover" />
               </div>
             ))}
           </div>

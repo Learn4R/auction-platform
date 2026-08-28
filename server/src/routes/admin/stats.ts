@@ -26,7 +26,7 @@ router.get('/', authenticate('admin'), async (_req, res) => {
       where: { paymentStatus: 'paid' },
       _sum: { winningBid: true, buyerPremium: true },
     }),
-    prisma.item.count({ where: { status: 'pending' } }),
+    prisma.item.count({ where: { status: { in: ['submitted', 'under_review'] } } }),
     prisma.order.count({ where: { paymentStatus: 'pending' } }),
   ])
 

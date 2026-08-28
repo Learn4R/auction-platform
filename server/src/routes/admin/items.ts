@@ -3,18 +3,83 @@ import { prisma } from '../../lib/prisma.js'
 import { authenticate } from '../../middleware/auth.js'
 import { logAdminAction } from '../../lib/auditLog.js'
 import { notifyNow, createNotification, broadcastNotifications } from '../../lib/notify.js'
-import { itemWithProposalSelect } from '../items.js'
+import { itemWithProposalSelect, withDisplayStatus } from '../items.js'
 
 const router = Router()
 
+const REVIEWABLE_STATUSES = ['submitted', 'under_review'] as const
+
 router.get('/pending', authenticate('admin'), async (_req, res) => {
   const items = await prisma.item.findMany({
-    where: { status: 'pending' },
+    where: { status: 'submitted' },
     select: itemWithProposalSelect,
     orderBy: { title: 'asc' },
   })
 
-  res.json(items)
+  res.json(items.map(withDisplayStatus))
+})
+
+router.get('/under-review', authenticate('admin'), async (_req, res) => {
+  const items = await prisma.item.findMany({
+    where: { status: 'under_review' },
+    select: itemWithProposalSelect,
+    orderBy: { title: 'asc' },
+  })
+
+  res.json(items.map(withDisplayStatus))
+})
+
+router.patch<{ id: string }>('/:id/mark-under-review', authenticate('admin'), async (req, res) => {
+  const item = await prisma.item.findUnique({ where: { id: req.params.id } })
+
+  if (!item) {
+    res.status(404).json({ error: 'item not found' })
+    return
+  }
+  if (item.status !== 'submitted') {
+    res.status(409).json({ error: `item is not submitted (current status: ${item.status})` })
+    return
+  }
+
+  const updated = await prisma.item.update({
+    where: { id: item.id },
+    data: { status: 'under_review' },
+    select: itemWithProposalSelect,
+  })
+
+  await logAdminAction(req.user!.id, 'mark_item_under_review', item.title ?? item.id)
+
+  res.json(withDisplayStatus(updated))
+})
+
+router.patch<{ id: string }>('/:id/request-changes', authenticate('admin'), async (req, res) => {
+  const { note } = req.body ?? {}
+
+  if (typeof note !== 'string' || !note.trim()) {
+    res.status(400).json({ error: 'note is required' })
+    return
+  }
+
+  const item = await prisma.item.findUnique({ where: { id: req.params.id } })
+
+  if (!item) {
+    res.status(404).json({ error: 'item not found' })
+    return
+  }
+  if (!REVIEWABLE_STATUSES.includes(item.status as (typeof REVIEWABLE_STATUSES)[number])) {
+    res.status(409).json({ error: `changes cannot be requested from status: ${item.status}` })
+    return
+  }
+
+  const updated = await prisma.item.update({
+    where: { id: item.id },
+    data: { status: 'changes_requested', changesRequestedNote: note },
+    select: itemWithProposalSelect,
+  })
+
+  await logAdminAction(req.user!.id, 'request_item_changes', `${item.title ?? item.id} — note: ${note}`)
+
+  res.json(withDisplayStatus(updated))
 })
 
 router.patch<{ id: string }>('/:id/approve', authenticate('admin'), async (req, res) => {
@@ -24,8 +89,8 @@ router.patch<{ id: string }>('/:id/approve', authenticate('admin'), async (req, 
     res.status(404).json({ error: 'item not found' })
     return
   }
-  if (item.status !== 'pending') {
-    res.status(409).json({ error: `item is not pending (current status: ${item.status})` })
+  if (!REVIEWABLE_STATUSES.includes(item.status as (typeof REVIEWABLE_STATUSES)[number])) {
+    res.status(409).json({ error: `item is not submitted or under review (current status: ${item.status})` })
     return
   }
   if (
@@ -59,7 +124,7 @@ router.patch<{ id: string }>('/:id/approve', authenticate('admin'), async (req, 
     })
 
     await tx.adminAction.create({
-      data: { adminId: req.user!.id, action: 'approve_item', target: item.title },
+      data: { adminId: req.user!.id, action: 'approve_item', target: item.title ?? item.id },
     })
 
     const notification = await createNotification(tx, {
@@ -74,7 +139,7 @@ router.patch<{ id: string }>('/:id/approve', authenticate('admin'), async (req, 
 
   broadcastNotifications([updated.notification])
 
-  res.json(updated.updatedItem)
+  res.json(withDisplayStatus(updated.updatedItem))
 })
 
 router.patch<{ id: string }>('/:id/reject', authenticate('admin'), async (req, res) => {
@@ -91,8 +156,8 @@ router.patch<{ id: string }>('/:id/reject', authenticate('admin'), async (req, r
     res.status(404).json({ error: 'item not found' })
     return
   }
-  if (item.status !== 'pending') {
-    res.status(409).json({ error: `item is not pending (current status: ${item.status})` })
+  if (!REVIEWABLE_STATUSES.includes(item.status as (typeof REVIEWABLE_STATUSES)[number])) {
+    res.status(409).json({ error: `item is not submitted or under review (current status: ${item.status})` })
     return
   }
 
@@ -102,7 +167,7 @@ router.patch<{ id: string }>('/:id/reject', authenticate('admin'), async (req, r
     select: itemWithProposalSelect,
   })
 
-  await logAdminAction(req.user!.id, 'reject_item', `${item.title} — reason: ${reason}`)
+  await logAdminAction(req.user!.id, 'reject_item', `${item.title ?? item.id} — reason: ${reason}`)
 
   await notifyNow(prisma, {
     userId: item.sellerId,
@@ -111,7 +176,7 @@ router.patch<{ id: string }>('/:id/reject', authenticate('admin'), async (req, r
     itemId: item.id,
   })
 
-  res.json(updated)
+  res.json(withDisplayStatus(updated))
 })
 
 export default router
