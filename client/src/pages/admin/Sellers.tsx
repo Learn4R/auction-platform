@@ -78,7 +78,7 @@ export default function Sellers() {
                     <button
                       onClick={() => handleToggle(seller.id)}
                       disabled={busyId === seller.id}
-                      className="text-[12.5px] font-semibold text-royal hover:text-deepblue disabled:opacity-50"
+                      className="rounded-lg px-2.5 py-1.5 text-[12.5px] font-semibold text-royal hover:bg-royal/5 hover:text-deepblue disabled:opacity-50"
                     >
                       {seller.verified ? 'Unverify' : 'Verify'}
                     </button>

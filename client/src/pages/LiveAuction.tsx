@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Emblem } from '../components/Emblem'
 import { ItemSpecs } from '../components/ItemSpecs'
@@ -46,11 +46,30 @@ export default function LiveAuction({ state }: { state: ReturnType<typeof useIte
     handleSetMaxBid,
   } = state
   const [activeImage, setActiveImage] = useState(0)
+  const [showStickyBar, setShowStickyBar] = useState(false)
+  const bidSectionRef = useRef<HTMLDivElement>(null)
+
+  // Only show the sticky quick-bid bar once the in-page bid controls have
+  // scrolled out of view, so the two don't sit stacked on first paint.
+  useEffect(() => {
+    const node = bidSectionRef.current
+    if (!node) return
+    const observer = new IntersectionObserver(([entry]) => setShowStickyBar(!entry.isIntersecting), {
+      rootMargin: '-96px 0px 0px 0px',
+    })
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [item, auction])
 
   if (!item || !auction) return null
 
+  function scrollToBid() {
+    if (!confirming && nextMin !== null) setBidInput(String(nextMin))
+    bidSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
+
   return (
-    <div className="bg-white pb-20">
+    <div className="bg-white pb-24 lg:pb-20">
       {/* Stage: the immersive live-bidding hero */}
       <div className="bg-gradient-to-b from-[#0b1f42] to-royal text-white">
         <div className="mx-auto max-w-[1000px] px-6 pt-8 pb-10">
@@ -116,7 +135,7 @@ export default function LiveAuction({ state }: { state: ReturnType<typeof useIte
             </div>
           </div>
 
-          <div className="mx-auto max-w-[520px]">
+          <div ref={bidSectionRef} className="mx-auto max-w-[520px] scroll-mt-24">
             <div className="mb-3 text-center text-[13px] text-white/60">
               Minimum next bid: <b className="font-mono text-gold">{formatCurrency(nextMin ?? 0)}</b>
             </div>
@@ -293,6 +312,37 @@ export default function LiveAuction({ state }: { state: ReturnType<typeof useIte
               ))
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Sticky quick-bid bar, phone/tablet only — appears once the in-page
+          bid controls scroll out of view, so the auction stays biddable
+          without needing to scroll back up, matching a real live-auction app. */}
+      <div
+        className={`fixed inset-x-0 bottom-0 z-40 border-t border-royal/10 bg-white/95 px-4 py-3 shadow-[0_-4px_16px_rgba(23,59,112,0.12)] backdrop-blur transition-transform duration-200 lg:hidden ${
+          showStickyBar ? 'translate-y-0' : 'translate-y-full'
+        }`}
+      >
+        <div className="mx-auto flex max-w-[1000px] items-center justify-between gap-3">
+          <div>
+            <div className="font-mono text-[9px] tracking-wider text-gray-500 uppercase">Current Bid</div>
+            <div className="font-mono text-xl font-bold text-royal">{formatCurrency(price!)}</div>
+          </div>
+          {!user ? (
+            <Link
+              to="/login"
+              className="flex-none rounded-lg bg-royal px-6 py-3 text-center text-[14px] font-semibold text-white"
+            >
+              Log In to Bid
+            </Link>
+          ) : (
+            <button
+              onClick={scrollToBid}
+              className="flex-none rounded-lg bg-gold px-6 py-3 text-[14px] font-bold text-royal transition active:scale-[0.98]"
+            >
+              Bid {formatCurrency(nextMin ?? 0)}
+            </button>
+          )}
         </div>
       </div>
     </div>

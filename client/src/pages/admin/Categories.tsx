@@ -108,7 +108,7 @@ export default function Categories() {
           {categories.map((cat, i) => (
             <div
               key={cat.id}
-              className={`flex items-center justify-between gap-4 px-5 py-3.5 ${i > 0 ? 'border-t border-gray-100' : ''}`}
+              className={`flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 ${i > 0 ? 'border-t border-gray-100' : ''}`}
             >
               {editingId === cat.id ? (
                 <input
@@ -147,14 +147,14 @@ export default function Categories() {
                   <>
                     <button
                       onClick={() => startEdit(cat)}
-                      className="text-[12.5px] font-semibold text-royal hover:text-deepblue"
+                      className="rounded-lg px-2.5 py-1.5 text-[12.5px] font-semibold text-royal hover:bg-royal/5 hover:text-deepblue"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => handleDelete(cat)}
                       disabled={busyId === cat.id}
-                      className="text-[12.5px] font-semibold text-red hover:text-red/70 disabled:opacity-50"
+                      className="rounded-lg px-2.5 py-1.5 text-[12.5px] font-semibold text-red hover:bg-red/5 hover:text-red/70 disabled:opacity-50"
                     >
                       Delete
                     </button>

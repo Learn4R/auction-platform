@@ -16,6 +16,7 @@ import Archive from './pages/Archive'
 import Browse from './pages/Browse'
 import Dashboard from './pages/Dashboard'
 import Home from './pages/Home'
+import HowItWorks from './pages/HowItWorks'
 import ItemDetail from './pages/ItemDetail'
 import Legal from './pages/Legal'
 import Login from './pages/Login'
@@ -33,6 +34,7 @@ function App() {
         <Route path="browse" element={<Browse />} />
         <Route path="upcoming" element={<Upcoming />} />
         <Route path="archive" element={<Archive />} />
+        <Route path="how-it-works" element={<HowItWorks />} />
         <Route path="items/:id" element={<ItemDetail />} />
         <Route path="legal/:slug" element={<Legal />} />
         <Route path="login" element={<Login />} />

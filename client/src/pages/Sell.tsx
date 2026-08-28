@@ -124,7 +124,7 @@ function SellerApplicationGate({ status, onSubmitted }: { status: MySellerApplic
             className="input"
           />
         </Field>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Field label="City">
             <input required value={form.city} onChange={(e) => update('city', e.target.value)} className="input" />
           </Field>
@@ -148,7 +148,7 @@ function SellerApplicationGate({ status, onSubmitted }: { status: MySellerApplic
               className="input"
             />
           </Field>
-          <div className="mt-4 grid grid-cols-2 gap-4">
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Bank Account Number">
               <input
                 required
@@ -516,7 +516,7 @@ function ItemSubmissionForm({ editItem }: { editItem: ItemSubmission | null }) {
             <Field label="Title">
               <input value={form.title} onChange={(e) => update('title', e.target.value)} className="input" />
             </Field>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label="Year">
                 <input type="number" value={form.year} onChange={(e) => update('year', e.target.value)} className="input" />
               </Field>
@@ -592,7 +592,7 @@ function ItemSubmissionForm({ editItem }: { editItem: ItemSubmission | null }) {
             <Field label="Condition">
               <input value={form.condition} onChange={(e) => update('condition', e.target.value)} className="input" placeholder="e.g. Extremely Fine" />
             </Field>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label="Grade">
                 <input value={form.grade} onChange={(e) => update('grade', e.target.value)} className="input" placeholder="e.g. MS-63" />
               </Field>
@@ -616,7 +616,7 @@ function ItemSubmissionForm({ editItem }: { editItem: ItemSubmission | null }) {
         )}
 
         {step === 5 && (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Starting Bid (₹)">
               <input type="number" min="1" value={form.startingBid} onChange={(e) => update('startingBid', e.target.value)} className="input" />
             </Field>
@@ -639,22 +639,22 @@ function ItemSubmissionForm({ editItem }: { editItem: ItemSubmission | null }) {
         {stepError && <p className="text-sm text-red">{stepError}</p>}
         {error && <p className="text-sm text-red">{error}</p>}
 
-        <div className="mt-2 flex items-center justify-between border-t border-gray-100 pt-4">
+        <div className="mt-2 flex flex-col gap-3 border-t border-gray-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
           <button
             type="button"
             onClick={goBack}
             disabled={step === 1}
-            className="rounded-lg border border-royal/20 px-5 py-2.5 text-[14px] font-semibold text-charcoal transition hover:bg-gray-50 disabled:opacity-0"
+            className={`rounded-lg border border-royal/20 px-5 py-2.5 text-[14px] font-semibold text-charcoal transition hover:bg-gray-50 ${step === 1 ? 'hidden sm:block sm:opacity-0' : ''}`}
           >
             ← Back
           </button>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
             <button
               type="button"
               onClick={handleSaveDraft}
               disabled={savingDraft}
-              className="rounded-lg border border-royal/20 px-5 py-2.5 text-[14px] font-semibold text-charcoal transition hover:bg-gray-50 disabled:opacity-50"
+              className="order-2 rounded-lg border border-royal/20 px-5 py-2.5 text-[14px] font-semibold text-charcoal transition hover:bg-gray-50 disabled:opacity-50 sm:order-1"
             >
               {savingDraft ? 'Saving…' : isEditing ? 'Save Progress' : 'Save as Draft'}
             </button>
@@ -663,7 +663,7 @@ function ItemSubmissionForm({ editItem }: { editItem: ItemSubmission | null }) {
               <button
                 type="button"
                 onClick={goNext}
-                className="rounded-lg bg-royal px-6 py-2.5 text-[14px] font-semibold text-white transition hover:bg-deepblue"
+                className="order-1 rounded-lg bg-royal px-6 py-3 text-[14px] font-semibold text-white transition hover:bg-deepblue sm:order-2 sm:py-2.5"
               >
                 Next →
               </button>
@@ -672,7 +672,7 @@ function ItemSubmissionForm({ editItem }: { editItem: ItemSubmission | null }) {
                 type="button"
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="rounded-lg bg-royal px-6 py-3 text-[15px] font-semibold text-white transition hover:bg-deepblue disabled:opacity-50"
+                className="order-1 rounded-lg bg-royal px-6 py-3 text-[15px] font-semibold text-white transition hover:bg-deepblue disabled:opacity-50 sm:order-2"
               >
                 {submitting ? 'Submitting…' : isEditing ? 'Resubmit for Review' : 'Submit for Review'}
               </button>
@@ -752,10 +752,10 @@ function ReviewStep({ form, images, categoryName }: { form: ItemForm; images: Im
         {rows.map(([label, value], i) => (
           <div
             key={label}
-            className={`flex items-start justify-between gap-4 px-4 py-2.5 text-[13px] ${i % 2 === 0 ? 'bg-gray-50/60' : ''}`}
+            className={`flex flex-col gap-0.5 px-4 py-2.5 text-[13px] sm:flex-row sm:items-start sm:justify-between sm:gap-4 ${i % 2 === 0 ? 'bg-gray-50/60' : ''}`}
           >
             <span className="flex-none text-gray-500">{label}</span>
-            <span className="text-right font-medium text-charcoal">{value}</span>
+            <span className="font-medium text-charcoal sm:text-right">{value}</span>
           </div>
         ))}
       </div>

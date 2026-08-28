@@ -34,14 +34,14 @@ export default function MyListings() {
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-14">
-      <div className="mb-8 flex items-end justify-between gap-4">
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="mb-2 font-display text-3xl text-royal">Seller Dashboard</h1>
           <p className="text-sm text-gray-500">Your application status, performance, listings, and payouts in one place.</p>
         </div>
         <Link
           to="/sell"
-          className="rounded-lg bg-royal px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-deepblue"
+          className="inline-flex flex-none items-center justify-center rounded-lg bg-royal px-5 py-2.5 text-sm font-semibold whitespace-nowrap text-white transition hover:bg-deepblue"
         >
           + Sell an Item
         </Link>
