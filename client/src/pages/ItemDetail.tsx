@@ -40,6 +40,7 @@ export default function ItemDetail() {
   const [maxBidSaved, setMaxBidSaved] = useState<string | null>(null)
 
   const [notice, setNotice] = useState<string | null>(null)
+  const [activeImage, setActiveImage] = useState(0)
 
   useEffect(() => {
     if (!id) return
@@ -167,8 +168,32 @@ export default function ItemDetail() {
       <div className="mx-auto grid max-w-[1240px] grid-cols-1 gap-11 px-6 pt-5 lg:grid-cols-[1.2fr_0.8fr]">
         <div>
           <div className="flex aspect-[1.3/1] items-center justify-center overflow-hidden rounded-xl border border-royal/10 bg-gradient-to-br from-[#F6F3EC] to-ivory">
-            <Emblem className="h-3/5 w-3/5" />
+            {item.images.length > 0 ? (
+              <img
+                src={item.images[activeImage] ?? item.images[0]}
+                alt={item.title}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <Emblem className="h-3/5 w-3/5" />
+            )}
           </div>
+
+          {item.images.length > 1 && (
+            <div className="mt-3 flex gap-2.5">
+              {item.images.map((src, i) => (
+                <button
+                  key={src}
+                  onClick={() => setActiveImage(i)}
+                  className={`h-16 w-16 flex-none overflow-hidden rounded-lg border-2 transition ${
+                    i === activeImage ? 'border-gold' : 'border-transparent opacity-70 hover:opacity-100'
+                  }`}
+                >
+                  <img src={src} alt="" className="h-full w-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
 
           <div className="mt-6">
             <div className="flex flex-wrap items-center gap-2.5">

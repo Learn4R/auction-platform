@@ -1,9 +1,49 @@
 import { AuctionStatus, Prisma } from '@prisma/client'
+import type { NextFunction, Request, Response } from 'express'
 import { Router } from 'express'
+import multer from 'multer'
 import { prisma } from '../lib/prisma.js'
 import { authenticate } from '../middleware/auth.js'
+import { deleteItemImages, uploadItemImage } from '../lib/supabaseStorage.js'
 
 const router = Router()
+
+const MAX_IMAGES = 6
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: MAX_IMAGE_BYTES, files: MAX_IMAGES },
+  fileFilter: (_req, file, cb) => {
+    if (!file.mimetype.startsWith('image/')) {
+      cb(new Error('Only image files are allowed'))
+      return
+    }
+    cb(null, true)
+  },
+})
+
+function handleImageUpload(req: Request, res: Response, next: NextFunction) {
+  upload.array('images', MAX_IMAGES)(req, res, (err: unknown) => {
+    if (!err) {
+      next()
+      return
+    }
+    if (err instanceof multer.MulterError) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        res.status(400).json({ error: `Each image must be ${MAX_IMAGE_BYTES / (1024 * 1024)}MB or smaller` })
+        return
+      }
+      if (err.code === 'LIMIT_FILE_COUNT') {
+        res.status(400).json({ error: `You can upload up to ${MAX_IMAGES} images` })
+        return
+      }
+      res.status(400).json({ error: err.message })
+      return
+    }
+    res.status(400).json({ error: err instanceof Error ? err.message : 'Image upload failed' })
+  })
+}
 
 const itemSummarySelect = {
   id: true,
@@ -70,20 +110,10 @@ router.get('/', async (req, res) => {
   res.json(items)
 })
 
-router.post('/', authenticate('seller', 'admin'), async (req, res) => {
-  const {
-    title,
-    description,
-    categoryId,
-    year,
-    material,
-    condition,
-    images,
-    startingBid,
-    bidIncrement,
-    startTime,
-    endTime,
-  } = req.body ?? {}
+router.post('/', authenticate('seller', 'admin'), handleImageUpload, async (req, res) => {
+  const { title, description, categoryId, year, material, condition, startingBid, bidIncrement, startTime, endTime } =
+    req.body ?? {}
+  const files = (req.files as Express.Multer.File[] | undefined) ?? []
 
   if (typeof title !== 'string' || !title.trim()) {
     res.status(400).json({ error: 'title is required' })
@@ -97,13 +127,14 @@ router.post('/', authenticate('seller', 'admin'), async (req, res) => {
     res.status(400).json({ error: 'categoryId is required' })
     return
   }
-  if (year !== undefined && year !== null && !Number.isInteger(year)) {
-    res.status(400).json({ error: 'year must be an integer' })
-    return
-  }
-  if (images !== undefined && (!Array.isArray(images) || !images.every((i) => typeof i === 'string'))) {
-    res.status(400).json({ error: 'images must be an array of strings' })
-    return
+
+  let yearNum: number | null = null
+  if (year !== undefined && year !== null && year !== '') {
+    yearNum = Number(year)
+    if (!Number.isInteger(yearNum)) {
+      res.status(400).json({ error: 'year must be an integer' })
+      return
+    }
   }
 
   const startingBidNum = Number(startingBid)
@@ -134,26 +165,41 @@ router.post('/', authenticate('seller', 'admin'), async (req, res) => {
     return
   }
 
-  const item = await prisma.item.create({
-    data: {
-      title,
-      description,
-      categoryId,
-      year: year ?? null,
-      material: material ?? null,
-      condition: condition ?? null,
-      images: images ?? [],
-      sellerId: req.user!.id,
-      status: 'pending',
-      proposedStartingBid: startingBidNum,
-      proposedBidIncrement: bidIncrementNum,
-      proposedStartTime: startDate,
-      proposedEndTime: endDate,
-    },
-    select: itemWithProposalSelect,
+  const uploaded = await Promise.all(
+    files.map((file) => uploadItemImage(file.buffer, file.mimetype, file.originalname)),
+  ).catch(async (err) => {
+    res.status(500).json({ error: 'Failed to upload one or more images' })
+    console.error(err)
+    return null
   })
+  if (uploaded === null) return
 
-  res.status(201).json(item)
+  try {
+    const item = await prisma.item.create({
+      data: {
+        title,
+        description,
+        categoryId,
+        year: yearNum,
+        material: material || null,
+        condition: condition || null,
+        images: uploaded.map((u) => u.url),
+        sellerId: req.user!.id,
+        status: 'pending',
+        proposedStartingBid: startingBidNum,
+        proposedBidIncrement: bidIncrementNum,
+        proposedStartTime: startDate,
+        proposedEndTime: endDate,
+      },
+      select: itemWithProposalSelect,
+    })
+
+    res.status(201).json(item)
+  } catch (err) {
+    // Roll back any uploaded images if the item row couldn't be created.
+    await deleteItemImages(uploaded.map((u) => u.path))
+    throw err
+  }
 })
 
 router.get('/:id', async (req, res) => {

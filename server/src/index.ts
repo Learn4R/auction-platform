@@ -12,6 +12,7 @@ import ordersRouter from './routes/orders.js'
 import sellerRouter from './routes/seller.js'
 import { initSocket } from './realtime/io.js'
 import { startAuctionScheduler } from './realtime/scheduler.js'
+import { ensureItemImagesBucket } from './lib/supabaseStorage.js'
 
 const app = express()
 const port = process.env.PORT ?? 3000
@@ -35,6 +36,10 @@ app.use('/api/archive', archiveRouter)
 const httpServer = createServer(app)
 initSocket(httpServer)
 startAuctionScheduler()
+
+ensureItemImagesBucket().catch((err) => {
+  console.error('Failed to verify/create the item-images storage bucket:', err)
+})
 
 httpServer.listen(port, () => {
   console.log(`Server listening on http://localhost:${port}`)

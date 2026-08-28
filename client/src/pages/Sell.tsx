@@ -1,7 +1,10 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { getCategories, submitItem, type Category } from '../lib/api'
 import { useAuth } from '../lib/auth'
+
+const MAX_IMAGES = 6
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024
 
 const emptyForm = {
   title: '',
@@ -10,20 +13,27 @@ const emptyForm = {
   year: '',
   material: '',
   condition: '',
-  images: '',
   startingBid: '',
   bidIncrement: '',
   startTime: '',
   endTime: '',
 }
 
+interface ImagePick {
+  file: File
+  previewUrl: string
+}
+
 export default function Sell() {
   const { token } = useAuth()
   const [categories, setCategories] = useState<Category[]>([])
   const [form, setForm] = useState(emptyForm)
+  const [images, setImages] = useState<ImagePick[]>([])
+  const [imageError, setImageError] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [submittedTitle, setSubmittedTitle] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     getCategories()
@@ -34,8 +44,49 @@ export default function Sell() {
       .catch(() => {})
   }, [])
 
+  // Revoke object URLs on unmount to avoid leaking memory.
+  useEffect(() => {
+    return () => {
+      for (const img of images) URL.revokeObjectURL(img.previewUrl)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   function update<K extends keyof typeof emptyForm>(key: K, value: (typeof emptyForm)[K]) {
     setForm((f) => ({ ...f, [key]: value }))
+  }
+
+  function handleFilesSelected(e: ChangeEvent<HTMLInputElement>) {
+    const picked = Array.from(e.target.files ?? [])
+    e.target.value = ''
+    setImageError(null)
+
+    if (images.length + picked.length > MAX_IMAGES) {
+      setImageError(`You can upload up to ${MAX_IMAGES} images (${images.length} already selected).`)
+      return
+    }
+
+    const tooBig = picked.find((f) => f.size > MAX_IMAGE_BYTES)
+    if (tooBig) {
+      setImageError(`"${tooBig.name}" is larger than 5MB.`)
+      return
+    }
+
+    const notImage = picked.find((f) => !f.type.startsWith('image/'))
+    if (notImage) {
+      setImageError(`"${notImage.name}" isn't an image file.`)
+      return
+    }
+
+    setImages((prev) => [...prev, ...picked.map((file) => ({ file, previewUrl: URL.createObjectURL(file) }))])
+  }
+
+  function removeImage(index: number) {
+    setImages((prev) => {
+      const target = prev[index]
+      if (target) URL.revokeObjectURL(target.previewUrl)
+      return prev.filter((_, i) => i !== index)
+    })
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -52,10 +103,7 @@ export default function Sell() {
           year: form.year ? Number(form.year) : null,
           material: form.material,
           condition: form.condition,
-          images: form.images
-            .split(',')
-            .map((i) => i.trim())
-            .filter(Boolean),
+          images: images.map((i) => i.file),
           startingBid: Number(form.startingBid),
           bidIncrement: Number(form.bidIncrement),
           startTime: new Date(form.startTime).toISOString(),
@@ -65,6 +113,9 @@ export default function Sell() {
       )
       setSubmittedTitle(item.title)
       setForm({ ...emptyForm, categoryId: categories[0]?.id ?? '' })
+      for (const img of images) URL.revokeObjectURL(img.previewUrl)
+      setImages([])
+      setImageError(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Submission failed')
     } finally {
@@ -146,8 +197,41 @@ export default function Sell() {
           <input name="condition" value={form.condition} onChange={(e) => update('condition', e.target.value)} className="input" />
         </Field>
 
-        <Field label="Image URLs (comma-separated)">
-          <input name="images" value={form.images} onChange={(e) => update('images', e.target.value)} className="input" />
+        <Field label={`Photos (up to ${MAX_IMAGES}, 5MB each)`}>
+          <div className="flex flex-wrap gap-3">
+            {images.map((img, i) => (
+              <div key={img.previewUrl} className="group relative h-20 w-20 flex-none overflow-hidden rounded-lg border border-royal/15">
+                <img src={img.previewUrl} alt="" className="h-full w-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => removeImage(i)}
+                  className="absolute top-0.5 right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-charcoal/70 text-[11px] font-bold text-white opacity-0 transition group-hover:opacity-100"
+                  aria-label="Remove image"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+            {images.length < MAX_IMAGES && (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex h-20 w-20 flex-none flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-royal/25 text-gray-400 transition hover:border-royal/50 hover:text-royal"
+              >
+                <span className="text-xl leading-none">+</span>
+                <span className="text-[10px] font-semibold">Add</span>
+              </button>
+            )}
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleFilesSelected}
+            className="hidden"
+          />
+          {imageError && <span className="text-[11.5px] font-normal text-red">{imageError}</span>}
         </Field>
 
         <div className="mt-2 border-t border-gray-100 pt-4">

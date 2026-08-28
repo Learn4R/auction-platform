@@ -69,13 +69,15 @@ interface RequestOptions {
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const headers: Record<string, string> = {}
-  if (options.body !== undefined) headers['Content-Type'] = 'application/json'
+  const isFormData = options.body instanceof FormData
+  // Let the browser set the multipart Content-Type (with boundary) itself.
+  if (options.body !== undefined && !isFormData) headers['Content-Type'] = 'application/json'
   if (options.token) headers.Authorization = `Bearer ${options.token}`
 
   const res = await fetch(`${API_URL}${path}`, {
     method: options.method ?? 'GET',
     headers,
-    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+    body: options.body === undefined ? undefined : isFormData ? (options.body as FormData) : JSON.stringify(options.body),
   })
 
   if (!res.ok) {
@@ -122,7 +124,7 @@ export interface ItemSubmissionInput {
   year: number | null
   material: string
   condition: string
-  images: string[]
+  images: File[]
   startingBid: number
   bidIncrement: number
   startTime: string
@@ -130,7 +132,20 @@ export interface ItemSubmissionInput {
 }
 
 export function submitItem(data: ItemSubmissionInput, token: string) {
-  return request<ItemSubmission>('/api/items', { method: 'POST', body: data, token })
+  const form = new FormData()
+  form.set('title', data.title)
+  form.set('description', data.description)
+  form.set('categoryId', data.categoryId)
+  if (data.year !== null) form.set('year', String(data.year))
+  form.set('material', data.material)
+  form.set('condition', data.condition)
+  form.set('startingBid', String(data.startingBid))
+  form.set('bidIncrement', String(data.bidIncrement))
+  form.set('startTime', data.startTime)
+  form.set('endTime', data.endTime)
+  for (const file of data.images) form.append('images', file)
+
+  return request<ItemSubmission>('/api/items', { method: 'POST', body: form, token })
 }
 
 export function getMyItems(token: string) {

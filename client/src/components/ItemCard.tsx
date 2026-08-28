@@ -15,7 +15,11 @@ export function ItemCard({ item }: { item: ItemSummary }) {
       className="group flex flex-col overflow-hidden rounded-xl border border-royal/10 bg-white transition hover:-translate-y-0.5 hover:border-gold/40 hover:shadow-[0_4px_8px_rgba(23,59,112,0.05),0_20px_40px_-16px_rgba(23,59,112,0.20)]"
     >
       <div className="relative flex aspect-[1.15/1] items-center justify-center overflow-hidden bg-gradient-to-br from-[#F6F3EC] to-ivory">
-        <Emblem className="h-2/3 w-2/3" />
+        {item.images.length > 0 ? (
+          <img src={item.images[0]} alt={item.title} className="h-full w-full object-cover" />
+        ) : (
+          <Emblem className="h-2/3 w-2/3" />
+        )}
         {auction && (
           <div className="absolute top-3 left-3">
             <StatusBadge status={auction.status} />
