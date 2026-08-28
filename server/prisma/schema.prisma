@@ -39,6 +39,14 @@ enum ShippingStatus {
   delivered
 }
 
+enum NotificationType {
+  outbid
+  auction_won
+  listing_approved
+  listing_rejected
+  auction_extended
+}
+
 model User {
   id        String   @id @default(cuid())
   name      String
@@ -48,13 +56,14 @@ model User {
   verified  Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  items        Item[]        @relation("SellerItems")
-  bids         Bid[]
-  maxBids      MaxBid[]
-  watchlist    Watchlist[]
-  orders       Order[]       @relation("BuyerOrders")
-  wonAuctions  Auction[]     @relation("AuctionWinner")
-  adminActions AdminAction[]
+  items         Item[]         @relation("SellerItems")
+  bids          Bid[]
+  maxBids       MaxBid[]
+  watchlist     Watchlist[]
+  orders        Order[]        @relation("BuyerOrders")
+  wonAuctions   Auction[]      @relation("AuctionWinner")
+  adminActions  AdminAction[]
+  notifications Notification[]
 }
 
 model Category {
@@ -85,8 +94,9 @@ model Item {
   proposedEndTime      DateTime?
   rejectionReason      String?
 
-  auction   Auction?
-  watchlist Watchlist[]
+  auction       Auction?
+  watchlist     Watchlist[]
+  notifications Notification[]
 }
 
 model Auction {
@@ -102,9 +112,10 @@ model Auction {
   winnerId     String?
   winner       User?         @relation("AuctionWinner", fields: [winnerId], references: [id])
 
-  bids    Bid[]
-  maxBids MaxBid[]
-  order   Order?
+  bids          Bid[]
+  maxBids       MaxBid[]
+  order         Order?
+  notifications Notification[]
 }
 
 model Bid {
@@ -169,4 +180,20 @@ model AdminAction {
   action    String
   target    String
   createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id])
+  type      NotificationType
+  message   String
+  read      Boolean          @default(false)
+  itemId    String?
+  item      Item?            @relation(fields: [itemId], references: [id])
+  auctionId String?
+  auction   Auction?         @relation(fields: [auctionId], references: [id])
+  createdAt DateTime         @default(now())
+
+  @@index([userId, createdAt])
 }

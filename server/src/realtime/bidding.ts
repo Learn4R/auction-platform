@@ -1,5 +1,6 @@
-import type { Prisma } from '@prisma/client'
+import type { Notification, Prisma } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
+import { createNotification, broadcastNotifications } from '../lib/notify.js'
 import { getIO } from './io.js'
 
 const ANTI_SNIPE_WINDOW_MS = 30_000
@@ -27,6 +28,7 @@ interface CascadeResult {
   endTime: Date
   extended: boolean
   bidsCreated: CreatedBid[]
+  outbidUserIds: string[]
 }
 
 function minNextBid(currentBid: number | null, startingBid: number, bidIncrement: number) {
@@ -54,6 +56,7 @@ async function resolveProxyCascade(
   let deadline = endTime
   let extended = false
   const bidsCreated: CreatedBid[] = []
+  const outbidUserIds: string[] = []
 
   const maxBids = await tx.maxBid.findMany({ where: { auctionId } })
   const remaining = new Map(maxBids.map((m) => [m.userId, Number(m.amount)]))
@@ -72,6 +75,8 @@ async function resolveProxyCascade(
       }
     }
     if (!bestUserId) break
+
+    if (leader && leader !== bestUserId) outbidUserIds.push(leader)
 
     const proxyAmount = Math.min(bestAmount, minToBeat)
     price = proxyAmount
@@ -93,7 +98,51 @@ async function resolveProxyCascade(
     await tx.auction.update({ where: { id: auctionId }, data: { currentBid: price, endTime: deadline } })
   }
 
-  return { currentBid: price, leaderId: leader, endTime: deadline, extended, bidsCreated }
+  return { currentBid: price, leaderId: leader, endTime: deadline, extended, bidsCreated, outbidUserIds }
+}
+
+async function notifyOutbidAndExtended(
+  tx: Prisma.TransactionClient,
+  auctionId: string,
+  itemId: string,
+  itemTitle: string,
+  outbidUserIds: string[],
+  extended: boolean,
+): Promise<Notification[]> {
+  const notifications: Notification[] = []
+
+  for (const userId of new Set(outbidUserIds)) {
+    notifications.push(
+      await createNotification(tx, {
+        userId,
+        type: 'outbid',
+        message: `You've been outbid on "${itemTitle}"`,
+        itemId,
+        auctionId,
+      }),
+    )
+  }
+
+  if (extended) {
+    const [bidders, maxBidders] = await Promise.all([
+      tx.bid.findMany({ where: { auctionId }, select: { userId: true }, distinct: ['userId'] }),
+      tx.maxBid.findMany({ where: { auctionId }, select: { userId: true } }),
+    ])
+    const interested = new Set([...bidders.map((b) => b.userId), ...maxBidders.map((m) => m.userId)])
+    for (const userId of interested) {
+      notifications.push(
+        await createNotification(tx, {
+          userId,
+          type: 'auction_extended',
+          message: `Bidding on "${itemTitle}" was extended due to a last-minute bid`,
+          itemId,
+          auctionId,
+        }),
+      )
+    }
+  }
+
+  return notifications
 }
 
 function assertAuctionIsLive(auction: { status: string; startTime: Date; endTime: Date }, now: Date) {
@@ -137,7 +186,10 @@ export async function placeBid(auctionId: string, userId: string, amount: number
   const now = new Date()
 
   const result = await prisma.$transaction(async (tx) => {
-    const auction = await tx.auction.findUnique({ where: { id: auctionId } })
+    const auction = await tx.auction.findUnique({
+      where: { id: auctionId },
+      include: { item: { select: { title: true } } },
+    })
     if (!auction) throw new BidError('Auction not found', 404)
 
     assertAuctionIsLive(auction, now)
@@ -149,6 +201,9 @@ export async function placeBid(auctionId: string, userId: string, amount: number
     if (amount < minRequired) {
       throw new BidError(`Bid must be at least ${minRequired}`)
     }
+
+    const previousLeaderBid = await tx.bid.findFirst({ where: { auctionId }, orderBy: { createdAt: 'desc' } })
+    const previousLeaderId = previousLeaderBid?.userId ?? null
 
     // Optimistic concurrency guard: this update only succeeds if currentBid
     // still matches what we just read. Postgres also row-locks the auction
@@ -166,6 +221,9 @@ export async function placeBid(auctionId: string, userId: string, amount: number
 
     const humanBid = await tx.bid.create({ data: { auctionId, userId, amount, isProxy: false } })
 
+    const outbidUserIds: string[] = []
+    if (previousLeaderId && previousLeaderId !== userId) outbidUserIds.push(previousLeaderId)
+
     let endTime = auction.endTime
     let extended = false
     if (endTime.getTime() - now.getTime() <= ANTI_SNIPE_WINDOW_MS) {
@@ -175,22 +233,35 @@ export async function placeBid(auctionId: string, userId: string, amount: number
     }
 
     const cascade = await resolveProxyCascade(tx, auctionId, bidIncrement, startingBid, amount, userId, endTime, now)
+    outbidUserIds.push(...cascade.outbidUserIds)
 
     const allBids: CreatedBid[] = [
       { id: humanBid.id, userId, amount, isProxy: false, createdAt: humanBid.createdAt },
       ...cascade.bidsCreated,
     ]
 
+    const finalExtended = extended || cascade.extended
+    const notifications = await notifyOutbidAndExtended(
+      tx,
+      auctionId,
+      auction.itemId,
+      auction.item.title,
+      outbidUserIds,
+      finalExtended,
+    )
+
     return {
       currentBid: cascade.currentBid,
       leaderId: cascade.leaderId,
       endTime: cascade.endTime,
-      extended: extended || cascade.extended,
+      extended: finalExtended,
       allBids,
+      notifications,
     }
   })
 
   await broadcastBids(auctionId, result.allBids, result.endTime, result.extended)
+  broadcastNotifications(result.notifications)
 
   return { currentBid: result.currentBid, endTime: result.endTime, leaderId: result.leaderId }
 }
@@ -203,7 +274,10 @@ export async function setMaxBid(auctionId: string, userId: string, amount: numbe
   const now = new Date()
 
   const result = await prisma.$transaction(async (tx) => {
-    const auction = await tx.auction.findUnique({ where: { id: auctionId } })
+    const auction = await tx.auction.findUnique({
+      where: { id: auctionId },
+      include: { item: { select: { title: true } } },
+    })
     if (!auction) throw new BidError('Auction not found', 404)
 
     assertAuctionIsLive(auction, now)
@@ -227,13 +301,31 @@ export async function setMaxBid(auctionId: string, userId: string, amount: numbe
 
     if (leaderId === userId) {
       // Already winning; nothing to resolve, just save the new ceiling.
-      return { currentBid: currentBid ?? startingBid, leaderId, endTime: auction.endTime, extended: false, bidsCreated: [] as CreatedBid[] }
+      return {
+        currentBid: currentBid ?? startingBid,
+        leaderId,
+        endTime: auction.endTime,
+        extended: false,
+        bidsCreated: [] as CreatedBid[],
+        notifications: [] as Notification[],
+      }
     }
 
-    return resolveProxyCascade(tx, auctionId, bidIncrement, startingBid, currentBid, leaderId, auction.endTime, now)
+    const cascade = await resolveProxyCascade(tx, auctionId, bidIncrement, startingBid, currentBid, leaderId, auction.endTime, now)
+    const notifications = await notifyOutbidAndExtended(
+      tx,
+      auctionId,
+      auction.itemId,
+      auction.item.title,
+      cascade.outbidUserIds,
+      cascade.extended,
+    )
+
+    return { ...cascade, notifications }
   })
 
   await broadcastBids(auctionId, result.bidsCreated, result.endTime, result.extended)
+  broadcastNotifications(result.notifications)
 
   return { amount, currentBid: result.currentBid, leaderId: result.leaderId }
 }

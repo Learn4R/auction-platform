@@ -1,5 +1,6 @@
 import { prisma } from '../lib/prisma.js'
 import { getBuyerPremiumPercent } from '../lib/settings.js'
+import { createNotification, broadcastNotifications } from '../lib/notify.js'
 import { getIO } from './io.js'
 
 const CHECK_INTERVAL_MS = 5_000
@@ -15,7 +16,10 @@ async function endExpiredAuctions() {
     const result = await prisma.$transaction(async (tx) => {
       // Re-check inside the transaction in case a last-second bid extended it
       // between the findMany above and now.
-      const auction = await tx.auction.findUnique({ where: { id } })
+      const auction = await tx.auction.findUnique({
+        where: { id },
+        include: { item: { select: { title: true } } },
+      })
       if (!auction || auction.status !== 'live' || auction.endTime > new Date()) return null
 
       const winningBid = await tx.bid.findFirst({ where: { auctionId: id }, orderBy: { createdAt: 'desc' } })
@@ -29,6 +33,7 @@ async function endExpiredAuctions() {
         ? await tx.user.findUnique({ where: { id: winningBid.userId }, select: { id: true, name: true } })
         : null
 
+      let notification = null
       if (winningBid) {
         const buyerPremiumPercent = await getBuyerPremiumPercent(tx)
         const winningBidAmount = Number(winningBid.amount)
@@ -44,9 +49,17 @@ async function endExpiredAuctions() {
             totalAmount,
           },
         })
+
+        notification = await createNotification(tx, {
+          userId: winningBid.userId,
+          type: 'auction_won',
+          message: `You won the auction for "${auction.item.title}"!`,
+          itemId: auction.itemId,
+          auctionId: id,
+        })
       }
 
-      return { auction: updated, winner }
+      return { auction: updated, winner, notification }
     })
 
     if (result) {
@@ -54,6 +67,7 @@ async function endExpiredAuctions() {
         winner: result.winner,
         endedAt: result.auction.endTime,
       })
+      if (result.notification) broadcastNotifications([result.notification])
     }
   }
 }

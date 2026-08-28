@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { prisma } from '../../lib/prisma.js'
 import { authenticate } from '../../middleware/auth.js'
 import { logAdminAction } from '../../lib/auditLog.js'
+import { notifyNow, createNotification, broadcastNotifications } from '../../lib/notify.js'
 import { itemWithProposalSelect } from '../items.js'
 
 const router = Router()
@@ -61,10 +62,19 @@ router.patch<{ id: string }>('/:id/approve', authenticate('admin'), async (req, 
       data: { adminId: req.user!.id, action: 'approve_item', target: item.title },
     })
 
-    return updatedItem
+    const notification = await createNotification(tx, {
+      userId: item.sellerId,
+      type: 'listing_approved',
+      message: `Your listing "${item.title}" was approved and is now live for bidding`,
+      itemId: item.id,
+    })
+
+    return { updatedItem, notification }
   })
 
-  res.json(updated)
+  broadcastNotifications([updated.notification])
+
+  res.json(updated.updatedItem)
 })
 
 router.patch<{ id: string }>('/:id/reject', authenticate('admin'), async (req, res) => {
@@ -93,6 +103,13 @@ router.patch<{ id: string }>('/:id/reject', authenticate('admin'), async (req, r
   })
 
   await logAdminAction(req.user!.id, 'reject_item', `${item.title} — reason: ${reason}`)
+
+  await notifyNow(prisma, {
+    userId: item.sellerId,
+    type: 'listing_rejected',
+    message: `Your listing "${item.title}" was rejected: ${reason}`,
+    itemId: item.id,
+  })
 
   res.json(updated)
 })

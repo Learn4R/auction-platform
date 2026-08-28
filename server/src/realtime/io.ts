@@ -15,6 +15,18 @@ export function initSocket(httpServer: HttpServer, clientUrl: string): Server {
     socket.on('leave-auction', (auctionId: unknown) => {
       if (typeof auctionId === 'string' && auctionId) socket.leave(auctionId)
     })
+    socket.on('identify', (userId: unknown) => {
+      if (typeof userId !== 'string' || !userId) return
+      const previous = socket.data.userId as string | undefined
+      if (previous && previous !== userId) socket.leave(`user:${previous}`)
+      socket.data.userId = userId
+      socket.join(`user:${userId}`)
+    })
+    socket.on('unidentify', () => {
+      const previous = socket.data.userId as string | undefined
+      if (previous) socket.leave(`user:${previous}`)
+      socket.data.userId = undefined
+    })
   })
 
   return io
