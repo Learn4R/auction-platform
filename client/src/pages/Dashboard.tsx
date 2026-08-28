@@ -1,18 +1,21 @@
 import { useEffect, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { Emblem } from '../components/Emblem'
-import { ItemCard } from '../components/ItemCard'
+import { ItemCard, type QuickBidState } from '../components/ItemCard'
 import { OrdersPanel } from '../components/OrdersPanel'
 import {
   getDashboardOverview,
   getMyBids,
   getWatchlist,
+  placeBid,
   type DashboardOverview,
   type ItemSummary,
   type MyBidRow,
 } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { formatCountdownPrecise, formatCurrency, formatDateTime } from '../lib/format'
+import { getSocket } from '../lib/socket'
+import { minNextBid } from '../lib/useItemAuction'
 
 const TABS = ['bids', 'watchlist', 'won', 'lost'] as const
 type Tab = (typeof TABS)[number]
@@ -266,10 +269,22 @@ function AuctionsLost() {
   )
 }
 
+interface WatchlistLiveState {
+  currentBid: string | null
+  bidsCount: number
+  busy: boolean
+  myStatus: 'winning' | 'outbid' | null
+  message: { type: 'success' | 'error'; text: string } | null
+}
+
 function Watchlist() {
-  const { token } = useAuth()
+  const { token, user } = useAuth()
   const [items, setItems] = useState<ItemSummary[] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // Keyed by auctionId — tracks price/bidder state for live watchlist items
+  // that quick-bidding and the real-time socket connection keep up to date
+  // in place, without refetching the whole watchlist.
+  const [live, setLive] = useState<Record<string, WatchlistLiveState>>({})
 
   useEffect(() => {
     if (!token) return
@@ -277,6 +292,107 @@ function Watchlist() {
       .then(setItems)
       .catch((err) => setError(err.message))
   }, [token])
+
+  useEffect(() => {
+    if (!items) return
+    setLive((prev) => {
+      const next = { ...prev }
+      for (const item of items) {
+        if (item.auction?.status === 'live' && !next[item.auction.id]) {
+          next[item.auction.id] = {
+            currentBid: item.auction.currentBid,
+            bidsCount: item.auction._count.bids,
+            busy: false,
+            myStatus: null,
+            message: null,
+          }
+        }
+      }
+      return next
+    })
+  }, [items])
+
+  useEffect(() => {
+    if (!items) return
+    const liveAuctionIds = items.filter((i) => i.auction?.status === 'live').map((i) => i.auction!.id)
+    if (liveAuctionIds.length === 0) return
+
+    const socket = getSocket()
+    for (const id of liveAuctionIds) socket.emit('join-auction', id)
+
+    function onBid(payload: { auctionId: string; bid: { user: { id: string } }; currentBid: string }) {
+      if (!liveAuctionIds.includes(payload.auctionId)) return
+      setLive((prev) => {
+        const existing = prev[payload.auctionId]
+        if (!existing) return prev
+        const iAmLeader = user?.id === payload.bid.user.id
+        return {
+          ...prev,
+          [payload.auctionId]: {
+            ...existing,
+            currentBid: payload.currentBid,
+            bidsCount: existing.bidsCount + 1,
+            myStatus: iAmLeader ? 'winning' : existing.myStatus === 'winning' ? 'outbid' : existing.myStatus,
+          },
+        }
+      })
+    }
+    socket.on('auction:bid', onBid)
+
+    return () => {
+      for (const id of liveAuctionIds) socket.emit('leave-auction', id)
+      socket.off('auction:bid', onBid)
+    }
+  }, [items, user?.id])
+
+  async function handleQuickBid(item: ItemSummary) {
+    if (!token || !item.auction) return
+    const auctionId = item.auction.id
+    const state = live[auctionId]
+    const amount = minNextBid({
+      currentBid: state?.currentBid ?? item.auction.currentBid,
+      startingBid: item.auction.startingBid,
+      bidIncrement: item.auction.bidIncrement,
+    })
+
+    setLive((prev) => ({
+      ...prev,
+      [auctionId]: { ...prev[auctionId], busy: true, message: null },
+    }))
+
+    try {
+      const result = await placeBid(auctionId, amount, token)
+      // currentBid/bidsCount are left for the "auction:bid" socket handler
+      // above to update — it fires for this bid too (we're joined to the
+      // room), so updating both here and there would double-count bids.
+      setLive((prev) => ({
+        ...prev,
+        [auctionId]: {
+          ...prev[auctionId],
+          busy: false,
+          myStatus: result.leaderId === user?.id ? 'winning' : 'outbid',
+          message: { type: 'success', text: `Bid placed: ${formatCurrency(amount)}` },
+        },
+      }))
+    } catch (err) {
+      setLive((prev) => ({
+        ...prev,
+        [auctionId]: {
+          ...prev[auctionId],
+          busy: false,
+          message: { type: 'error', text: err instanceof Error ? err.message : 'Failed to place bid' },
+        },
+      }))
+    }
+
+    setTimeout(() => {
+      setLive((prev) => {
+        const current = prev[auctionId]
+        if (!current) return prev
+        return { ...prev, [auctionId]: { ...current, message: null } }
+      })
+    }, 4000)
+  }
 
   if (error) return <p className="text-sm text-red">{error}</p>
   if (!items) return <p className="text-sm text-gray-500">Loading…</p>
@@ -297,9 +413,36 @@ function Watchlist() {
 
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {items.map((item) => (
-        <ItemCard key={item.id} item={item} />
-      ))}
+      {items.map((item) => {
+        const auctionId = item.auction?.status === 'live' ? item.auction.id : null
+        const state = auctionId ? live[auctionId] : undefined
+        const effectiveItem =
+          auctionId && state && item.auction
+            ? { ...item, auction: { ...item.auction, currentBid: state.currentBid, _count: { bids: state.bidsCount } } }
+            : item
+        const quickBid: QuickBidState | undefined =
+          auctionId && item.auction
+            ? {
+                minNextBid: minNextBid({
+                  currentBid: state?.currentBid ?? item.auction.currentBid,
+                  startingBid: item.auction.startingBid,
+                  bidIncrement: item.auction.bidIncrement,
+                }),
+                busy: state?.busy ?? false,
+                myStatus: state?.myStatus ?? null,
+                message: state?.message ?? null,
+              }
+            : undefined
+
+        return (
+          <ItemCard
+            key={item.id}
+            item={effectiveItem}
+            quickBid={quickBid}
+            onQuickBid={() => handleQuickBid(item)}
+          />
+        )
+      })}
     </div>
   )
 }

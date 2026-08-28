@@ -11,7 +11,7 @@ import { useAuth } from './auth'
 import { formatCurrency } from './format'
 import { getSocket } from './socket'
 
-export function minNextBid(auction: AuctionDetail) {
+export function minNextBid(auction: { currentBid: string | null; startingBid: string; bidIncrement: string }) {
   return auction.currentBid === null
     ? Number(auction.startingBid)
     : Number(auction.currentBid) + Number(auction.bidIncrement)

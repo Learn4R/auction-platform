@@ -153,7 +153,7 @@ function assertAuctionIsLive(auction: { status: string; startTime: Date; endTime
 
 async function broadcastBids(auctionId: string, bids: CreatedBid[], finalEndTime: Date, extended: boolean) {
   if (bids.length === 0) {
-    if (extended) getIO().to(auctionId).emit('auction:extended', { endTime: finalEndTime })
+    if (extended) getIO().to(auctionId).emit('auction:extended', { auctionId, endTime: finalEndTime })
     return
   }
 
@@ -164,6 +164,7 @@ async function broadcastBids(auctionId: string, bids: CreatedBid[], finalEndTime
   const io = getIO()
   for (const bid of bids) {
     io.to(auctionId).emit('auction:bid', {
+      auctionId,
       bid: {
         id: bid.id,
         amount: String(bid.amount),
@@ -175,7 +176,7 @@ async function broadcastBids(auctionId: string, bids: CreatedBid[], finalEndTime
       endTime: finalEndTime,
     })
   }
-  if (extended) io.to(auctionId).emit('auction:extended', { endTime: finalEndTime })
+  if (extended) io.to(auctionId).emit('auction:extended', { auctionId, endTime: finalEndTime })
 }
 
 export async function placeBid(auctionId: string, userId: string, amount: number) {
