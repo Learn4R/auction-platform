@@ -41,7 +41,7 @@ export function Layout() {
                 My Orders
               </NavLink>
             )}
-            {user?.role === 'seller' && (
+            {(user?.role === 'seller' || user?.role === 'admin') && (
               <>
                 <NavLink to="/sell" className={navLinkClass}>
                   Sell an Item
@@ -59,13 +59,24 @@ export function Layout() {
           </nav>
           <div className="flex items-center gap-4">
             {user ? (
-              <button onClick={handleLogout} className="text-sm font-medium text-charcoal hover:text-royal">
-                Log Out
-              </button>
+              <>
+                <span className="text-sm font-medium text-charcoal">{user.name}</span>
+                <button onClick={handleLogout} className="text-sm font-medium text-gray-500 hover:text-royal">
+                  Log Out
+                </button>
+              </>
             ) : (
-              <NavLink to="/login" className={navLinkClass}>
-                Log In
-              </NavLink>
+              <>
+                <NavLink to="/login" className={navLinkClass}>
+                  Log In
+                </NavLink>
+                <NavLink
+                  to="/signup"
+                  className="rounded-lg bg-royal px-4 py-2 text-sm font-semibold text-white transition hover:bg-deepblue"
+                >
+                  Sign Up
+                </NavLink>
+              </>
             )}
           </div>
         </div>

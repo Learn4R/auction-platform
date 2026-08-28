@@ -5,6 +5,7 @@ import type { Role } from '@prisma/client'
 export interface AuthPayload {
   id: string
   role: Role
+  name: string
 }
 
 declare global {

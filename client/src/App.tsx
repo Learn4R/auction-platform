@@ -15,6 +15,7 @@ import Login from './pages/Login'
 import MyListings from './pages/MyListings'
 import Orders from './pages/Orders'
 import Sell from './pages/Sell'
+import Signup from './pages/Signup'
 
 function App() {
   return (
@@ -24,11 +25,12 @@ function App() {
         <Route path="browse" element={<Browse />} />
         <Route path="items/:id" element={<ItemDetail />} />
         <Route path="login" element={<Login />} />
+        <Route path="signup" element={<Signup />} />
         <Route path="orders" element={<Orders />} />
         <Route
           path="sell"
           element={
-            <RequireRole role="seller">
+            <RequireRole role={['seller', 'admin']}>
               <Sell />
             </RequireRole>
           }
@@ -36,7 +38,7 @@ function App() {
         <Route
           path="my-listings"
           element={
-            <RequireRole role="seller">
+            <RequireRole role={['seller', 'admin']}>
               <MyListings />
             </RequireRole>
           }

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
 
 export default function Login() {
@@ -15,8 +15,8 @@ export default function Login() {
     setError(null)
     setSubmitting(true)
     try {
-      const user = await login(email, password)
-      navigate(user.role === 'admin' ? '/admin' : user.role === 'seller' ? '/my-listings' : '/')
+      await login(email, password)
+      navigate('/')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed')
     } finally {
@@ -27,7 +27,7 @@ export default function Login() {
   return (
     <div className="mx-auto max-w-md px-6 py-20">
       <h1 className="mb-2 font-display text-3xl text-royal">Log In</h1>
-      <p className="mb-8 text-sm text-gray-500">Sign in to sell items or manage the approval queue.</p>
+      <p className="mb-8 text-sm text-gray-500">Sign in to bid, sell items, or manage the marketplace.</p>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <label className="flex flex-col gap-1.5 text-[13px] font-semibold">
@@ -61,6 +61,13 @@ export default function Login() {
           {submitting ? 'Logging in…' : 'Log In'}
         </button>
       </form>
+
+      <p className="mt-6 text-center text-[13.5px] text-gray-500">
+        Don't have an account?{' '}
+        <Link to="/signup" className="font-semibold text-royal hover:text-deepblue">
+          Sign Up
+        </Link>
+      </p>
     </div>
   )
 }

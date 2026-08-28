@@ -106,6 +106,15 @@ export function login(email: string, password: string) {
   return request<{ token: string }>('/api/auth/login', { method: 'POST', body: { email, password } })
 }
 
+export type RegisterableRole = 'buyer' | 'seller'
+
+export function register(data: { name: string; email: string; password: string; role: RegisterableRole }) {
+  return request<{ id: string; name: string; email: string; role: RegisterableRole; createdAt: string }>(
+    '/api/auth/register',
+    { method: 'POST', body: data },
+  )
+}
+
 export interface ItemSubmissionInput {
   title: string
   description: string

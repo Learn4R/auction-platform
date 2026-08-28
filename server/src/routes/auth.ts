@@ -6,8 +6,10 @@ import { authenticate } from '../middleware/auth.js'
 import { Role } from '@prisma/client'
 
 const router = Router()
-const ROLES = Object.values(Role)
 const SALT_ROUNDS = 10
+// Admin accounts are provisioned directly in the database, never through
+// public self-registration.
+const REGISTERABLE_ROLES: Role[] = ['buyer', 'seller']
 
 router.post('/register', async (req, res) => {
   const { name, email, password, role } = req.body ?? {}
@@ -24,8 +26,8 @@ router.post('/register', async (req, res) => {
     res.status(400).json({ error: 'password must be at least 8 characters' })
     return
   }
-  if (!ROLES.includes(role)) {
-    res.status(400).json({ error: `role must be one of: ${ROLES.join(', ')}` })
+  if (!REGISTERABLE_ROLES.includes(role)) {
+    res.status(400).json({ error: `role must be one of: ${REGISTERABLE_ROLES.join(', ')}` })
     return
   }
 
@@ -71,7 +73,7 @@ router.post('/login', async (req, res) => {
     return
   }
 
-  const token = jwt.sign({ id: user.id, role: user.role }, secret, { expiresIn: '1d' })
+  const token = jwt.sign({ id: user.id, role: user.role, name: user.name }, secret, { expiresIn: '1d' })
 
   res.json({ token })
 })

@@ -1,9 +1,10 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react'
-import { login as apiLogin, type Role } from './api'
+import { login as apiLogin, register as apiRegister, type RegisterableRole, type Role } from './api'
 
 export interface AuthUser {
   id: string
   role: Role
+  name: string
   exp: number
 }
 
@@ -11,6 +12,7 @@ interface AuthContextValue {
   token: string | null
   user: AuthUser | null
   login: (email: string, password: string) => Promise<AuthUser>
+  register: (data: { name: string; email: string; password: string; role: RegisterableRole }) => Promise<AuthUser>
   logout: () => void
 }
 
@@ -22,7 +24,7 @@ function decodeToken(token: string): AuthUser | null {
   try {
     const payload = JSON.parse(atob(token.split('.')[1]))
     if (typeof payload.exp === 'number' && payload.exp * 1000 < Date.now()) return null
-    return { id: payload.id, role: payload.role, exp: payload.exp }
+    return { id: payload.id, role: payload.role, name: payload.name, exp: payload.exp }
   } catch {
     return null
   }
@@ -49,6 +51,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       login: async (email, password) => {
         const { token: newToken } = await apiLogin(email, password)
+        const decoded = decodeToken(newToken)
+        if (!decoded) throw new Error('Received an invalid token')
+        localStorage.setItem(STORAGE_KEY, newToken)
+        setSession({ token: newToken, user: decoded })
+        return decoded
+      },
+      register: async (data) => {
+        await apiRegister(data)
+        const { token: newToken } = await apiLogin(data.email, data.password)
         const decoded = decodeToken(newToken)
         if (!decoded) throw new Error('Received an invalid token')
         localStorage.setItem(STORAGE_KEY, newToken)
