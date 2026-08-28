@@ -364,3 +364,15 @@ export interface MyBidRow {
 export function getMyBids(token: string) {
   return request<MyBidRow[]>('/api/bids/mine', { token })
 }
+
+export interface AuditLogEntry {
+  id: string
+  action: string
+  target: string
+  createdAt: string
+  admin: { id: string; name: string }
+}
+
+export function getAuditLog(token: string) {
+  return request<AuditLogEntry[]>('/api/admin/audit-log', { token })
+}

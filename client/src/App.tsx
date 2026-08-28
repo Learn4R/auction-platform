@@ -3,6 +3,7 @@ import { Layout } from './components/Layout'
 import { RequireRole } from './components/RequireRole'
 import AdminLayout from './pages/admin/AdminLayout'
 import AdminApprovals from './pages/admin/Approvals'
+import AdminAuditLog from './pages/admin/AuditLog'
 import AdminCategories from './pages/admin/Categories'
 import AdminDashboard from './pages/admin/Dashboard'
 import AdminOrders from './pages/admin/Orders'
@@ -61,6 +62,7 @@ function App() {
           <Route path="categories" element={<AdminCategories />} />
           <Route path="sellers" element={<AdminSellers />} />
           <Route path="settings" element={<AdminSettings />} />
+          <Route path="audit-log" element={<AdminAuditLog />} />
         </Route>
       </Route>
     </Routes>

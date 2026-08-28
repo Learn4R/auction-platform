@@ -1,10 +1,11 @@
 import { Router } from 'express'
 import { authenticate } from '../middleware/auth.js'
+import { bidLimiter } from '../middleware/rateLimit.js'
 import { BidError, placeBid, setMaxBid } from '../realtime/bidding.js'
 
 const router = Router()
 
-router.post<{ id: string }>('/:id/bids', authenticate(), async (req, res) => {
+router.post<{ id: string }>('/:id/bids', authenticate(), bidLimiter, async (req, res) => {
   const { amount } = req.body ?? {}
   const amountNum = Number(amount)
 
@@ -20,7 +21,7 @@ router.post<{ id: string }>('/:id/bids', authenticate(), async (req, res) => {
   }
 })
 
-router.post<{ id: string }>('/:id/max-bid', authenticate(), async (req, res) => {
+router.post<{ id: string }>('/:id/max-bid', authenticate(), bidLimiter, async (req, res) => {
   const { amount } = req.body ?? {}
   const amountNum = Number(amount)
 

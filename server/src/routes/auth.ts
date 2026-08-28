@@ -3,6 +3,7 @@ import { Router } from 'express'
 import jwt from 'jsonwebtoken'
 import { prisma } from '../lib/prisma.js'
 import { authenticate } from '../middleware/auth.js'
+import { authLimiter } from '../middleware/rateLimit.js'
 import { Role } from '@prisma/client'
 
 const router = Router()
@@ -11,7 +12,7 @@ const SALT_ROUNDS = 10
 // public self-registration.
 const REGISTERABLE_ROLES: Role[] = ['buyer', 'seller']
 
-router.post('/register', async (req, res) => {
+router.post('/register', authLimiter, async (req, res) => {
   const { name, email, password, role } = req.body ?? {}
 
   if (typeof name !== 'string' || !name.trim()) {
@@ -47,7 +48,7 @@ router.post('/register', async (req, res) => {
   res.status(201).json(user)
 })
 
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   const { email, password } = req.body ?? {}
 
   if (typeof email !== 'string' || typeof password !== 'string') {

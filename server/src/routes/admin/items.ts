@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { prisma } from '../../lib/prisma.js'
 import { authenticate } from '../../middleware/auth.js'
+import { logAdminAction } from '../../lib/auditLog.js'
 import { itemWithProposalSelect } from '../items.js'
 
 const router = Router()
@@ -50,11 +51,17 @@ router.patch<{ id: string }>('/:id/approve', authenticate('admin'), async (req, 
       },
     })
 
-    return tx.item.update({
+    const updatedItem = await tx.item.update({
       where: { id: item.id },
       data: { status: 'approved' },
       select: itemWithProposalSelect,
     })
+
+    await tx.adminAction.create({
+      data: { adminId: req.user!.id, action: 'approve_item', target: item.title },
+    })
+
+    return updatedItem
   })
 
   res.json(updated)
@@ -84,6 +91,8 @@ router.patch<{ id: string }>('/:id/reject', authenticate('admin'), async (req, r
     data: { status: 'rejected', rejectionReason: reason },
     select: itemWithProposalSelect,
   })
+
+  await logAdminAction(req.user!.id, 'reject_item', `${item.title} — reason: ${reason}`)
 
   res.json(updated)
 })

@@ -20,6 +20,11 @@ const app = express()
 const port = process.env.PORT ?? 3000
 const clientUrl = process.env.CLIENT_URL ?? 'http://localhost:5173'
 
+// Trust the first hop (the platform's load balancer/reverse proxy) so
+// req.ip reflects the real client IP rather than the proxy's — required for
+// IP-based rate limiting to work correctly once deployed.
+app.set('trust proxy', 1)
+
 app.use(cors({ origin: clientUrl }))
 app.use(express.json())
 

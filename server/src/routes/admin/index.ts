@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import auditLogRouter from './auditLog.js'
 import categoriesRouter from './categories.js'
 import itemsRouter from './items.js'
 import ordersRouter from './orders.js'
@@ -14,5 +15,6 @@ router.use('/stats', statsRouter)
 router.use('/settings', settingsRouter)
 router.use('/categories', categoriesRouter)
 router.use('/sellers', sellersRouter)
+router.use('/audit-log', auditLogRouter)
 
 export default router

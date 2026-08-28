@@ -48,12 +48,13 @@ model User {
   verified  Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  items       Item[]      @relation("SellerItems")
-  bids        Bid[]
-  maxBids     MaxBid[]
-  watchlist   Watchlist[]
-  orders      Order[]     @relation("BuyerOrders")
-  wonAuctions Auction[]   @relation("AuctionWinner")
+  items        Item[]        @relation("SellerItems")
+  bids         Bid[]
+  maxBids      MaxBid[]
+  watchlist    Watchlist[]
+  orders       Order[]       @relation("BuyerOrders")
+  wonAuctions  Auction[]     @relation("AuctionWinner")
+  adminActions AdminAction[]
 }
 
 model Category {
@@ -159,4 +160,13 @@ model PlatformSettings {
   id                  String   @id @default("singleton")
   buyerPremiumPercent Decimal  @default(10) @db.Decimal(5, 2)
   updatedAt           DateTime @updatedAt
+}
+
+model AdminAction {
+  id        String   @id @default(cuid())
+  adminId   String
+  admin     User     @relation(fields: [adminId], references: [id])
+  action    String
+  target    String
+  createdAt DateTime @default(now())
 }

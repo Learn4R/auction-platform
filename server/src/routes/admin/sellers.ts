@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { prisma } from '../../lib/prisma.js'
 import { authenticate } from '../../middleware/auth.js'
+import { logAdminAction } from '../../lib/auditLog.js'
 
 const router = Router()
 
@@ -33,6 +34,8 @@ router.patch<{ id: string }>('/:id/verify', authenticate('admin'), async (req, r
     data: { verified: !seller.verified },
     select: { id: true, name: true, email: true, verified: true, createdAt: true },
   })
+
+  await logAdminAction(req.user!.id, updated.verified ? 'verify_seller' : 'unverify_seller', seller.name)
 
   res.json(updated)
 })
