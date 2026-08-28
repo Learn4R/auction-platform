@@ -342,3 +342,25 @@ export function getArchive(filters: ArchiveFilters = {}) {
   const query = params.toString()
   return request<ArchiveEntry[]>(`/api/archive${query ? `?${query}` : ''}`)
 }
+
+export function getWatchlist(token: string) {
+  return request<ItemSummary[]>('/api/watchlist', { token })
+}
+
+export function toggleWatchlist(itemId: string, token: string) {
+  return request<{ watchlisted: boolean }>(`/api/watchlist/${itemId}`, { method: 'POST', token })
+}
+
+export interface MyBidRow {
+  auctionId: string
+  item: { id: string; title: string; images: string[]; category: { id: string; name: string; slug: string } }
+  currentBid: string | null
+  status: AuctionStatus
+  endTime: string
+  myHighestBid: string
+  isWinning: boolean
+}
+
+export function getMyBids(token: string) {
+  return request<MyBidRow[]>('/api/bids/mine', { token })
+}

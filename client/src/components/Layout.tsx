@@ -40,8 +40,8 @@ export function Layout() {
               Archive
             </NavLink>
             {user && (
-              <NavLink to="/orders" className={navLinkClass}>
-                My Orders
+              <NavLink to="/dashboard" className={navLinkClass}>
+                My Dashboard
               </NavLink>
             )}
             {(user?.role === 'seller' || user?.role === 'admin') && (

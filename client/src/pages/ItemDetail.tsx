@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Emblem } from '../components/Emblem'
 import { StatusBadge } from '../components/StatusBadge'
+import { WatchlistButton } from '../components/WatchlistButton'
 import {
   getItem,
   placeBid as apiPlaceBid,
@@ -167,7 +168,7 @@ export default function ItemDetail() {
 
       <div className="mx-auto grid max-w-[1240px] grid-cols-1 gap-11 px-6 pt-5 lg:grid-cols-[1.2fr_0.8fr]">
         <div>
-          <div className="flex aspect-[1.3/1] items-center justify-center overflow-hidden rounded-xl border border-royal/10 bg-gradient-to-br from-[#F6F3EC] to-ivory">
+          <div className="relative flex aspect-[1.3/1] items-center justify-center overflow-hidden rounded-xl border border-royal/10 bg-gradient-to-br from-[#F6F3EC] to-ivory">
             {item.images.length > 0 ? (
               <img
                 src={item.images[activeImage] ?? item.images[0]}
@@ -177,6 +178,7 @@ export default function ItemDetail() {
             ) : (
               <Emblem className="h-3/5 w-3/5" />
             )}
+            <WatchlistButton itemId={item.id} className="absolute top-3 right-3" />
           </div>
 
           {item.images.length > 1 && (

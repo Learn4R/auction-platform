@@ -6,10 +6,12 @@ import adminRouter from './routes/admin/index.js'
 import archiveRouter from './routes/archive.js'
 import auctionsRouter from './routes/auctions.js'
 import authRouter from './routes/auth.js'
+import bidsRouter from './routes/bids.js'
 import categoriesRouter from './routes/categories.js'
 import itemsRouter from './routes/items.js'
 import ordersRouter from './routes/orders.js'
 import sellerRouter from './routes/seller.js'
+import watchlistRouter from './routes/watchlist.js'
 import { initSocket } from './realtime/io.js'
 import { startAuctionScheduler } from './realtime/scheduler.js'
 import { ensureItemImagesBucket } from './lib/supabaseStorage.js'
@@ -33,6 +35,8 @@ app.use('/api/admin', adminRouter)
 app.use('/api/auctions', auctionsRouter)
 app.use('/api/orders', ordersRouter)
 app.use('/api/archive', archiveRouter)
+app.use('/api/watchlist', watchlistRouter)
+app.use('/api/bids', bidsRouter)
 
 const httpServer = createServer(app)
 initSocket(httpServer, clientUrl)

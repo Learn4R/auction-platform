@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Emblem } from '../components/Emblem'
+import { WatchlistButton } from '../components/WatchlistButton'
 import { getArchive, getCategories, type ArchiveEntry, type ArchiveSort, type Category } from '../lib/api'
 import { formatCurrency, formatDateTime } from '../lib/format'
 
@@ -11,12 +12,17 @@ function ArchiveCard({ entry }: { entry: ArchiveEntry }) {
       className="group flex flex-col overflow-hidden rounded-xl border border-royal/10 bg-white transition hover:-translate-y-0.5 hover:border-gold/40 hover:shadow-[0_4px_8px_rgba(23,59,112,0.05),0_20px_40px_-16px_rgba(23,59,112,0.20)]"
     >
       <div className="relative flex aspect-[1.15/1] items-center justify-center overflow-hidden bg-gradient-to-br from-[#F6F3EC] to-ivory">
-        <Emblem className="h-2/3 w-2/3" />
+        {entry.images.length > 0 ? (
+          <img src={entry.images[0]} alt={entry.title} className="h-full w-full object-cover" />
+        ) : (
+          <Emblem className="h-2/3 w-2/3" />
+        )}
         <div className="absolute top-3 left-3">
           <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 font-mono text-[10.5px] font-semibold tracking-wider text-gray-500 uppercase">
             Sold
           </span>
         </div>
+        <WatchlistButton itemId={entry.id} className="absolute top-2.5 right-2.5" />
       </div>
       <div className="flex flex-1 flex-col gap-2.5 p-4">
         <div className="font-mono text-[10px] tracking-wider text-deepblue uppercase">{entry.category.name}</div>

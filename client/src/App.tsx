@@ -10,6 +10,7 @@ import AdminSellers from './pages/admin/Sellers'
 import AdminSettings from './pages/admin/Settings'
 import Archive from './pages/Archive'
 import Browse from './pages/Browse'
+import Dashboard from './pages/Dashboard'
 import Home from './pages/Home'
 import ItemDetail from './pages/ItemDetail'
 import Login from './pages/Login'
@@ -29,6 +30,7 @@ function App() {
         <Route path="login" element={<Login />} />
         <Route path="signup" element={<Signup />} />
         <Route path="orders" element={<Orders />} />
+        <Route path="dashboard" element={<Dashboard />} />
         <Route
           path="sell"
           element={

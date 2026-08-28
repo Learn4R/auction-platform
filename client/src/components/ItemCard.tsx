@@ -3,6 +3,7 @@ import type { ItemSummary } from '../lib/api'
 import { formatCountdown, formatCurrency } from '../lib/format'
 import { Emblem } from './Emblem'
 import { StatusBadge } from './StatusBadge'
+import { WatchlistButton } from './WatchlistButton'
 
 export function ItemCard({ item }: { item: ItemSummary }) {
   const { auction } = item
@@ -25,6 +26,7 @@ export function ItemCard({ item }: { item: ItemSummary }) {
             <StatusBadge status={auction.status} />
           </div>
         )}
+        <WatchlistButton itemId={item.id} className="absolute top-2.5 right-2.5" />
       </div>
       <div className="flex flex-1 flex-col gap-2.5 p-4">
         <div className="font-mono text-[10px] tracking-wider text-deepblue uppercase">

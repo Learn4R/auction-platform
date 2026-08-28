@@ -45,7 +45,7 @@ function handleImageUpload(req: Request, res: Response, next: NextFunction) {
   })
 }
 
-const itemSummarySelect = {
+export const itemSummarySelect = {
   id: true,
   title: true,
   description: true,
