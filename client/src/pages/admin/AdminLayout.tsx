@@ -3,6 +3,7 @@ import { NavLink, Outlet } from 'react-router-dom'
 const NAV_ITEMS = [
   { to: '/admin', label: 'Dashboard', end: true },
   { to: '/admin/approvals', label: 'Pending Approvals' },
+  { to: '/admin/seller-applications', label: 'Seller Applications' },
   { to: '/admin/orders', label: 'Orders' },
   { to: '/admin/payouts', label: 'Payouts Ledger' },
   { to: '/admin/categories', label: 'Categories' },

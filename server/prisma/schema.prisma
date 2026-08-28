@@ -56,27 +56,42 @@ enum PayoutStatus {
   on_hold
 }
 
-model User {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  password  String
-  role      Role     @default(buyer)
-  verified  Boolean  @default(false)
-  createdAt DateTime @default(now())
+enum SellerStatus {
+  none
+  pending
+  approved
+  rejected
+}
 
-  items           Item[]         @relation("SellerItems")
-  bids            Bid[]
-  maxBids         MaxBid[]
-  watchlist       Watchlist[]
-  orders          Order[]        @relation("BuyerOrders")
-  wonAuctions     Auction[]      @relation("AuctionWinner")
-  adminActions    AdminAction[]
-  notifications   Notification[]
-  reviewsWritten  Review[]       @relation("ReviewsWritten")
-  reviewsReceived Review[]       @relation("ReviewsReceived")
-  payouts         Payout[]       @relation("SellerPayouts")
-  reminders       Reminder[]
+enum SellerApplicationStatus {
+  pending
+  approved
+  rejected
+}
+
+model User {
+  id           String       @id @default(cuid())
+  name         String
+  email        String       @unique
+  password     String
+  role         Role         @default(buyer)
+  verified     Boolean      @default(false)
+  sellerStatus SellerStatus @default(none)
+  createdAt    DateTime     @default(now())
+
+  items              Item[]              @relation("SellerItems")
+  bids               Bid[]
+  maxBids            MaxBid[]
+  watchlist          Watchlist[]
+  orders             Order[]             @relation("BuyerOrders")
+  wonAuctions        Auction[]           @relation("AuctionWinner")
+  adminActions       AdminAction[]
+  notifications      Notification[]
+  reviewsWritten     Review[]            @relation("ReviewsWritten")
+  reviewsReceived    Review[]            @relation("ReviewsReceived")
+  payouts            Payout[]            @relation("SellerPayouts")
+  reminders          Reminder[]
+  sellerApplications SellerApplication[]
 }
 
 model Category {
@@ -229,6 +244,27 @@ model Review {
   createdAt  DateTime @default(now())
 
   @@index([sellerId, createdAt])
+}
+
+model SellerApplication {
+  id                String                  @id @default(cuid())
+  userId            String
+  user              User                    @relation(fields: [userId], references: [id])
+  fullName          String
+  mobile            String
+  address           String
+  city              String
+  state             String
+  pincode           String
+  panNumber         String
+  bankAccountNumber String
+  bankIFSC          String
+  status            SellerApplicationStatus @default(pending)
+  rejectionReason   String?
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+
+  @@index([userId, createdAt])
 }
 
 model Reminder {

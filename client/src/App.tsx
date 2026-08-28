@@ -9,6 +9,7 @@ import AdminDashboard from './pages/admin/Dashboard'
 import AdminLegal from './pages/admin/Legal'
 import AdminOrders from './pages/admin/Orders'
 import AdminPayouts from './pages/admin/Payouts'
+import AdminSellerApplications from './pages/admin/SellerApplications'
 import AdminSellers from './pages/admin/Sellers'
 import AdminSettings from './pages/admin/Settings'
 import Archive from './pages/Archive'
@@ -41,7 +42,7 @@ function App() {
         <Route
           path="sell"
           element={
-            <RequireRole role={['seller', 'admin']}>
+            <RequireRole role={['buyer', 'seller', 'admin']}>
               <Sell />
             </RequireRole>
           }
@@ -49,7 +50,7 @@ function App() {
         <Route
           path="my-listings"
           element={
-            <RequireRole role={['seller', 'admin']}>
+            <RequireRole role={['buyer', 'seller', 'admin']}>
               <MyListings />
             </RequireRole>
           }
@@ -64,6 +65,7 @@ function App() {
         >
           <Route index element={<AdminDashboard />} />
           <Route path="approvals" element={<AdminApprovals />} />
+          <Route path="seller-applications" element={<AdminSellerApplications />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="payouts" element={<AdminPayouts />} />
           <Route path="categories" element={<AdminCategories />} />

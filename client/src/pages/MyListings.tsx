@@ -2,11 +2,119 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ItemStatusBadge } from '../components/ItemStatusBadge'
 import { PayoutStatusBadge } from '../components/OrderStatus'
-import { getMyItems, getSellerPayouts, type ItemSubmission, type SellerPayout } from '../lib/api'
+import {
+  getMyItems,
+  getSellerDashboardSummary,
+  getSellerPayouts,
+  type ItemSubmission,
+  type SellerDashboardSummary,
+  type SellerPayout,
+} from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { formatCurrency, formatDateTime } from '../lib/format'
 
 export default function MyListings() {
+  const { token } = useAuth()
+  const [summary, setSummary] = useState<SellerDashboardSummary | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!token) return
+    getSellerDashboardSummary(token)
+      .then(setSummary)
+      .catch((err) => setError(err.message))
+  }, [token])
+
+  return (
+    <div className="mx-auto max-w-5xl px-6 py-14">
+      <div className="mb-8 flex items-end justify-between gap-4">
+        <div>
+          <h1 className="mb-2 font-display text-3xl text-royal">Seller Dashboard</h1>
+          <p className="text-sm text-gray-500">Your application status, performance, listings, and payouts in one place.</p>
+        </div>
+        <Link
+          to="/sell"
+          className="rounded-lg bg-royal px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-deepblue"
+        >
+          + Sell an Item
+        </Link>
+      </div>
+
+      {error && <p className="mb-4 text-sm text-red">{error}</p>}
+
+      {!summary ? (
+        <p className="text-sm text-gray-500">Loading…</p>
+      ) : (
+        <>
+          <StatusBanner summary={summary} />
+          {summary.sellerStatus === 'approved' && (
+            <>
+              <KpiCards summary={summary} />
+              <ListingsSection />
+              <PayoutsSection />
+            </>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
+function StatusBanner({ summary }: { summary: SellerDashboardSummary }) {
+  if (summary.sellerStatus === 'approved') return null
+
+  if (summary.sellerStatus === 'pending') {
+    return (
+      <div className="mb-8 rounded-xl border border-gold/40 bg-gold/5 p-5 text-[14px] text-[#8a6e18]">
+        <b>Your seller application is under review.</b> We'll let you know as soon as a decision is made.
+      </div>
+    )
+  }
+
+  if (summary.sellerStatus === 'rejected') {
+    return (
+      <div className="mb-8 rounded-xl border border-red/30 bg-red/5 p-5 text-[14px] text-red">
+        <b>Your seller application was rejected.</b>
+        {summary.application?.rejectionReason && <p className="mt-1">{summary.application.rejectionReason}</p>}
+        <Link to="/sell" className="mt-2 inline-block font-semibold underline">
+          Reapply →
+        </Link>
+      </div>
+    )
+  }
+
+  return (
+    <div className="mb-8 rounded-xl border border-royal/10 bg-white p-5 text-[14px] text-charcoal">
+      <b>You haven't applied to sell yet.</b> Apply to sell to start listing items for auction.
+      <Link to="/sell" className="mt-2 block font-semibold text-royal underline">
+        Apply to Sell →
+      </Link>
+    </div>
+  )
+}
+
+function KpiCards({ summary }: { summary: SellerDashboardSummary }) {
+  const cards = [
+    { label: 'Active Auctions', value: summary.activeAuctions },
+    { label: 'Sold Items', value: summary.soldItems },
+    { label: 'Unsold Items', value: summary.unsoldItems },
+    { label: 'Earnings', value: formatCurrency(summary.earnings) },
+    { label: 'Pending Payout', value: formatCurrency(summary.pendingPayout) },
+  ]
+
+  return (
+    <div className="mb-12 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      {cards.map((card) => (
+        <div key={card.label} className="rounded-xl border border-gold/40 bg-white p-4">
+          <div className="font-mono text-[9.5px] tracking-wider text-gray-500 uppercase">{card.label}</div>
+          <div className="mt-1 font-mono text-xl font-semibold text-royal">{card.value}</div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function ListingsSection() {
   const { token } = useAuth()
   const [items, setItems] = useState<ItemSubmission[] | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -19,18 +127,10 @@ export default function MyListings() {
   }, [token])
 
   return (
-    <div className="mx-auto max-w-4xl px-6 py-14">
-      <div className="mb-8 flex items-end justify-between gap-4">
-        <div>
-          <h1 className="mb-2 font-display text-3xl text-royal">My Listings</h1>
-          <p className="text-sm text-gray-500">Track the review status of every item you've submitted.</p>
-        </div>
-        <Link
-          to="/sell"
-          className="rounded-lg bg-royal px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-deepblue"
-        >
-          + Sell an Item
-        </Link>
+    <div className="mb-14">
+      <div className="mb-8">
+        <h2 className="mb-2 font-display text-2xl text-royal">My Listings</h2>
+        <p className="text-sm text-gray-500">Track the review status of every item you've submitted.</p>
       </div>
 
       {error && <p className="text-sm text-red">{error}</p>}
@@ -91,8 +191,6 @@ export default function MyListings() {
           ))}
         </div>
       )}
-
-      <PayoutsSection />
     </div>
   )
 }
@@ -110,7 +208,7 @@ function PayoutsSection() {
   }, [token])
 
   return (
-    <div className="mt-14">
+    <div>
       <div className="mb-8">
         <h2 className="mb-2 font-display text-2xl text-royal">My Payouts</h2>
         <p className="text-sm text-gray-500">Commission and net payout for each sold item, once the buyer pays.</p>

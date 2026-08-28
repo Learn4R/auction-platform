@@ -49,13 +49,13 @@ export function Layout() {
                 My Dashboard
               </NavLink>
             )}
-            {(user?.role === 'seller' || user?.role === 'admin') && (
+            {user && (
               <>
                 <NavLink to="/sell" className={navLinkClass}>
                   Sell an Item
                 </NavLink>
                 <NavLink to="/my-listings" className={navLinkClass}>
-                  My Listings
+                  Seller Dashboard
                 </NavLink>
               </>
             )}

@@ -110,7 +110,15 @@ router.get('/', async (req, res) => {
   res.json(items)
 })
 
-router.post('/', authenticate('seller', 'admin'), handleImageUpload, async (req, res) => {
+router.post('/', authenticate(), handleImageUpload, async (req, res) => {
+  if (req.user!.role !== 'admin') {
+    const seller = await prisma.user.findUnique({ where: { id: req.user!.id }, select: { sellerStatus: true } })
+    if (seller?.sellerStatus !== 'approved') {
+      res.status(403).json({ error: 'You must be an approved seller to submit items. Apply to sell from your dashboard.' })
+      return
+    }
+  }
+
   const { title, description, categoryId, year, material, condition, startingBid, bidIncrement, startTime, endTime } =
     req.body ?? {}
   const files = (req.files as Express.Multer.File[] | undefined) ?? []

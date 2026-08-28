@@ -501,3 +501,82 @@ export function getLegalPage(slug: string) {
 export function updateLegalPage(slug: string, data: { title?: string; content?: string }, token: string) {
   return request<LegalPage>(`/api/admin/legal/${slug}`, { method: 'PATCH', token, body: data })
 }
+
+export type SellerStatus = 'none' | 'pending' | 'approved' | 'rejected'
+export type SellerApplicationStatus = 'pending' | 'approved' | 'rejected'
+
+export interface SellerApplication {
+  id: string
+  fullName: string
+  mobile: string
+  address: string
+  city: string
+  state: string
+  pincode: string
+  panNumber: string
+  bankAccountNumber: string
+  bankIFSC: string
+  status: SellerApplicationStatus
+  rejectionReason: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface SellerApplicationInput {
+  fullName: string
+  mobile: string
+  address: string
+  city: string
+  state: string
+  pincode: string
+  panNumber: string
+  bankAccountNumber: string
+  bankIFSC: string
+}
+
+export interface MySellerApplication {
+  sellerStatus: SellerStatus
+  application: SellerApplication | null
+}
+
+export function getMySellerApplication(token: string) {
+  return request<MySellerApplication>('/api/seller/application', { token })
+}
+
+export function applyToSell(data: SellerApplicationInput, token: string) {
+  return request<SellerApplication>('/api/seller/apply', { method: 'POST', token, body: data })
+}
+
+export interface SellerDashboardSummary {
+  sellerStatus: SellerStatus
+  application: SellerApplication | null
+  activeAuctions: number
+  soldItems: number
+  unsoldItems: number
+  earnings: number
+  pendingPayout: number
+}
+
+export function getSellerDashboardSummary(token: string) {
+  return request<SellerDashboardSummary>('/api/seller/dashboard-summary', { token })
+}
+
+export interface AdminSellerApplication extends SellerApplication {
+  user: { id: string; name: string; email: string }
+}
+
+export function getPendingSellerApplications(token: string) {
+  return request<AdminSellerApplication[]>('/api/admin/seller-applications/pending', { token })
+}
+
+export function approveSellerApplication(id: string, token: string) {
+  return request<AdminSellerApplication>(`/api/admin/seller-applications/${id}/approve`, { method: 'PATCH', token })
+}
+
+export function rejectSellerApplication(id: string, reason: string, token: string) {
+  return request<AdminSellerApplication>(`/api/admin/seller-applications/${id}/reject`, {
+    method: 'PATCH',
+    token,
+    body: { reason },
+  })
+}
