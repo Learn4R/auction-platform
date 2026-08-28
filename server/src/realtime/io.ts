@@ -3,9 +3,9 @@ import { Server } from 'socket.io'
 
 let io: Server | null = null
 
-export function initSocket(httpServer: HttpServer): Server {
+export function initSocket(httpServer: HttpServer, clientUrl: string): Server {
   io = new Server(httpServer, {
-    cors: { origin: process.env.CLIENT_URL ?? '*' },
+    cors: { origin: clientUrl },
   })
 
   io.on('connection', (socket) => {

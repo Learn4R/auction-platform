@@ -16,8 +16,9 @@ import { ensureItemImagesBucket } from './lib/supabaseStorage.js'
 
 const app = express()
 const port = process.env.PORT ?? 3000
+const clientUrl = process.env.CLIENT_URL ?? 'http://localhost:5173'
 
-app.use(cors())
+app.use(cors({ origin: clientUrl }))
 app.use(express.json())
 
 app.get('/', (_req, res) => {
@@ -34,7 +35,7 @@ app.use('/api/orders', ordersRouter)
 app.use('/api/archive', archiveRouter)
 
 const httpServer = createServer(app)
-initSocket(httpServer)
+initSocket(httpServer, clientUrl)
 startAuctionScheduler()
 
 ensureItemImagesBucket().catch((err) => {
