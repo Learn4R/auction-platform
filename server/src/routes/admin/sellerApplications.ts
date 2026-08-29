@@ -34,7 +34,10 @@ router.get('/pending', authenticate('admin'), async (_req, res) => {
 })
 
 router.patch<{ id: string }>('/:id/approve', authenticate('admin'), async (req, res) => {
-  const application = await prisma.sellerApplication.findUnique({ where: { id: req.params.id } })
+  const application = await prisma.sellerApplication.findUnique({
+    where: { id: req.params.id },
+    include: { user: { select: { role: true } } },
+  })
 
   if (!application) {
     res.status(404).json({ error: 'application not found' })
@@ -53,7 +56,13 @@ router.patch<{ id: string }>('/:id/approve', authenticate('admin'), async (req, 
     }),
     prisma.user.update({
       where: { id: application.userId },
-      data: { sellerStatus: 'approved', role: 'seller' },
+      // Only promote a buyer to seller — an existing seller or admin who
+      // applies to sell keeps their current role. Overwriting it
+      // unconditionally would silently demote an admin to a seller.
+      data:
+        application.user.role === 'buyer'
+          ? { sellerStatus: 'approved', role: 'seller' }
+          : { sellerStatus: 'approved' },
     }),
   ])
 
