@@ -40,12 +40,12 @@ export default function Dashboard() {
 
       <Overview onNavigate={setTab} />
 
-      <div className="mb-8 flex gap-1 overflow-x-auto border-b border-royal/10">
+      <div className="mb-8 flex flex-wrap gap-x-6 gap-y-2 border-b border-royal/10">
         {TABS.map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`ml-6 border-b-2 px-1 pb-3 text-[14px] font-semibold whitespace-nowrap first:ml-0 ${tab === t ? 'border-gold text-royal' : 'border-transparent text-gray-500 hover:text-royal'}`}
+            className={`border-b-2 px-1 pb-3 text-[14px] font-semibold whitespace-nowrap ${tab === t ? 'border-gold text-royal' : 'border-transparent text-gray-500 hover:text-royal'}`}
           >
             {TAB_LABELS[t]}
           </button>
@@ -164,47 +164,92 @@ function MyBids() {
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-royal/10 bg-white">
-      <table className="w-full text-left text-[13.5px]">
-        <thead>
-          <tr className="border-b border-gray-100 bg-gray-50 font-mono text-[10.5px] tracking-wider text-gray-500 uppercase">
-            <th className="px-5 py-3">Item</th>
-            <th className="px-5 py-3">Current Bid</th>
-            <th className="px-5 py-3">My Highest Bid</th>
-            <th className="px-5 py-3">Status</th>
-            <th className="px-5 py-3">Ends In</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.auctionId} className="border-b border-gray-100 last:border-b-0">
-              <td className="px-5 py-3.5">
-                <Link to={`/items/${row.item.id}`} className="font-medium text-charcoal hover:text-royal">
+    <>
+      {/* Table on md+ — below that, a shrunk table can't show every column
+          without horizontal scrolling, so mobile gets the same stacked-card
+          treatment already working on My Listings. */}
+      <div className="hidden overflow-x-auto rounded-xl border border-royal/10 bg-white md:block">
+        <table className="w-full text-left text-[13.5px]">
+          <thead>
+            <tr className="border-b border-gray-100 bg-gray-50 font-mono text-[10.5px] tracking-wider text-gray-500 uppercase">
+              <th className="px-5 py-3">Item</th>
+              <th className="px-5 py-3">Current Bid</th>
+              <th className="px-5 py-3">My Highest Bid</th>
+              <th className="px-5 py-3">Status</th>
+              <th className="px-5 py-3">Ends In</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.auctionId} className="border-b border-gray-100 last:border-b-0">
+                <td className="px-5 py-3.5">
+                  <Link to={`/items/${row.item.id}`} className="font-medium text-charcoal hover:text-royal">
+                    {row.item.title}
+                  </Link>
+                  <div className="font-mono text-[11px] text-gray-500">{row.item.category.name}</div>
+                </td>
+                <td className="px-5 py-3.5 font-mono text-charcoal">
+                  {row.currentBid ? formatCurrency(row.currentBid) : '—'}
+                </td>
+                <td className="px-5 py-3.5 font-mono text-charcoal">{formatCurrency(row.myHighestBid)}</td>
+                <td className="px-5 py-3.5">
+                  <StatusPill status={row.status} isWinning={row.isWinning} />
+                </td>
+                <td className="px-5 py-3.5 font-mono text-[12.5px] text-gray-500">
+                  {row.status === 'live' ? (
+                    <span className="font-semibold text-red">{formatCountdownPrecise(row.endTime)}</span>
+                  ) : row.status === 'ended' ? (
+                    formatDateTime(row.endTime)
+                  ) : (
+                    'Not started'
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="flex flex-col gap-4 md:hidden">
+        {rows.map((row) => (
+          <div key={row.auctionId} className="rounded-xl border border-royal/10 bg-white p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <div className="font-mono text-[10px] tracking-wider text-deepblue uppercase">
+                  {row.item.category.name}
+                </div>
+                <Link
+                  to={`/items/${row.item.id}`}
+                  className="mt-1 block font-display text-lg font-medium text-charcoal hover:text-royal"
+                >
                   {row.item.title}
                 </Link>
-                <div className="font-mono text-[11px] text-gray-500">{row.item.category.name}</div>
-              </td>
-              <td className="px-5 py-3.5 font-mono text-charcoal">
-                {row.currentBid ? formatCurrency(row.currentBid) : '—'}
-              </td>
-              <td className="px-5 py-3.5 font-mono text-charcoal">{formatCurrency(row.myHighestBid)}</td>
-              <td className="px-5 py-3.5">
-                <StatusPill status={row.status} isWinning={row.isWinning} />
-              </td>
-              <td className="px-5 py-3.5 font-mono text-[12.5px] text-gray-500">
-                {row.status === 'live' ? (
-                  <span className="font-semibold text-red">{formatCountdownPrecise(row.endTime)}</span>
-                ) : row.status === 'ended' ? (
-                  formatDateTime(row.endTime)
-                ) : (
-                  'Not started'
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+              </div>
+              <StatusPill status={row.status} isWinning={row.isWinning} />
+            </div>
+
+            <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 border-t border-gray-100 pt-3 font-mono text-[12px] text-gray-500">
+              <span>
+                Current bid: <b className="text-charcoal">{row.currentBid ? formatCurrency(row.currentBid) : '—'}</b>
+              </span>
+              <span>
+                My highest: <b className="text-charcoal">{formatCurrency(row.myHighestBid)}</b>
+              </span>
+              <span className="col-span-2">
+                Ends in:{' '}
+                <b className={row.status === 'live' ? 'text-red' : 'text-charcoal'}>
+                  {row.status === 'live'
+                    ? formatCountdownPrecise(row.endTime)
+                    : row.status === 'ended'
+                      ? formatDateTime(row.endTime)
+                      : 'Not started'}
+                </b>
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
   )
 }
 

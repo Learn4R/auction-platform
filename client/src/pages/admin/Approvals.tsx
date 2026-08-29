@@ -139,7 +139,7 @@ export default function Approvals() {
                   <h3 className="mt-1 font-display text-lg font-medium text-charcoal">{item.title}</h3>
                   <p className="mt-1.5 max-w-xl text-[13.5px] text-gray-500">{item.description}</p>
                 </div>
-                <div className="flex flex-shrink-0 flex-wrap justify-end gap-2">
+                <div className="flex w-full flex-wrap justify-end gap-2 sm:w-auto sm:flex-shrink-0">
                   {tab === 'submitted' && (
                     <button
                       onClick={() => handleMarkUnderReview(item.id)}

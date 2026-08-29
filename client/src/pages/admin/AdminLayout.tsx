@@ -17,7 +17,7 @@ export default function AdminLayout() {
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
       <div className="grid grid-cols-1 gap-8 md:grid-cols-[200px_1fr]">
-        <nav className="flex gap-1 overflow-x-auto md:flex-col md:overflow-visible">
+        <nav className="flex flex-wrap gap-1 md:flex-col md:flex-nowrap">
           {NAV_ITEMS.map((item) => (
             <NavLink
               key={item.to}
