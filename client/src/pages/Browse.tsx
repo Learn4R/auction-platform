@@ -1,7 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { ItemCard } from '../components/ItemCard'
-import { getCategories, getItems, type AuctionStatus, type Category, type ItemSummary } from '../lib/api'
+import {
+  getCategories,
+  getItemFilterOptions,
+  getItems,
+  type AuctionStatus,
+  type Category,
+  type ItemFilterOptions,
+  type ItemSummary,
+} from '../lib/api'
 
 type SortKey = 'recommended' | 'ending' | 'newest' | 'low' | 'high'
 
@@ -44,9 +52,71 @@ interface FilterPanelProps {
   categories: Category[]
   onStatus: (value: string) => void
   onCategory: (value: string | null) => void
+  filterOptions: ItemFilterOptions | null
+  year: string | null
+  period: string | null
+  material: string | null
+  condition: string | null
+  grade: string | null
+  hasCertificate: boolean
+  onYear: (value: string | null) => void
+  onPeriod: (value: string | null) => void
+  onMaterial: (value: string | null) => void
+  onCondition: (value: string | null) => void
+  onGrade: (value: string | null) => void
+  onHasCertificate: (value: boolean) => void
 }
 
-function FilterPanel({ status, category, categories, onStatus, onCategory }: FilterPanelProps) {
+function AttributeSelect({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string
+  value: string | null
+  options: (string | number)[]
+  onChange: (value: string | null) => void
+}) {
+  return (
+    <div className="border-b border-gray-100 py-[18px] last:border-b-0">
+      <div className="mb-2.5 font-mono text-[10.5px] font-semibold tracking-wider text-royal uppercase">{label}</div>
+      <select
+        value={value ?? ''}
+        onChange={(e) => onChange(e.target.value || null)}
+        className="w-full rounded-lg border border-royal/15 bg-white px-3 py-2 text-[13px]"
+      >
+        <option value="">All</option>
+        {options.map((opt) => (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ))}
+      </select>
+    </div>
+  )
+}
+
+function FilterPanel({
+  status,
+  category,
+  categories,
+  onStatus,
+  onCategory,
+  filterOptions,
+  year,
+  period,
+  material,
+  condition,
+  grade,
+  hasCertificate,
+  onYear,
+  onPeriod,
+  onMaterial,
+  onCondition,
+  onGrade,
+  onHasCertificate,
+}: FilterPanelProps) {
   return (
     <>
       <div className="border-b border-gray-100 pb-[18px]">
@@ -88,6 +158,37 @@ function FilterPanel({ status, category, categories, onStatus, onCategory }: Fil
           ))}
         </div>
       </div>
+
+      {filterOptions && (
+        <div className="pt-[6px]">
+          {filterOptions.year.length > 0 && (
+            <AttributeSelect label="Year" value={year} options={filterOptions.year} onChange={onYear} />
+          )}
+          {filterOptions.period.length > 0 && (
+            <AttributeSelect label="Period" value={period} options={filterOptions.period} onChange={onPeriod} />
+          )}
+          {filterOptions.material.length > 0 && (
+            <AttributeSelect label="Material" value={material} options={filterOptions.material} onChange={onMaterial} />
+          )}
+          {filterOptions.condition.length > 0 && (
+            <AttributeSelect label="Condition" value={condition} options={filterOptions.condition} onChange={onCondition} />
+          )}
+          {filterOptions.grade.length > 0 && (
+            <AttributeSelect label="Grade" value={grade} options={filterOptions.grade} onChange={onGrade} />
+          )}
+          <div className="py-[18px]">
+            <label className="flex cursor-pointer items-center gap-2.5 text-[13.5px]">
+              <input
+                type="checkbox"
+                checked={hasCertificate}
+                onChange={(e) => onHasCertificate(e.target.checked)}
+                className="accent-royal"
+              />
+              Certificate Available
+            </label>
+          </div>
+        </div>
+      )}
     </>
   )
 }
@@ -98,15 +199,25 @@ export default function Browse() {
   const category = searchParams.get('category')
   const sort = (searchParams.get('sort') as SortKey | null) ?? 'recommended'
   const search = searchParams.get('search') ?? ''
+  const year = searchParams.get('year')
+  const period = searchParams.get('period')
+  const material = searchParams.get('material')
+  const condition = searchParams.get('condition')
+  const grade = searchParams.get('grade')
+  const hasCertificate = searchParams.get('hasCertificate') === 'true'
 
   const [items, setItems] = useState<ItemSummary[] | null>(null)
   const [categories, setCategories] = useState<Category[]>([])
+  const [filterOptions, setFilterOptions] = useState<ItemFilterOptions | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
 
   useEffect(() => {
     getCategories()
       .then(setCategories)
+      .catch(() => {})
+    getItemFilterOptions()
+      .then(setFilterOptions)
       .catch(() => {})
   }, [])
 
@@ -115,10 +226,16 @@ export default function Browse() {
     getItems({
       status: status === 'all' ? undefined : status,
       category: category ?? undefined,
+      year: year ? Number(year) : undefined,
+      period: period ?? undefined,
+      material: material ?? undefined,
+      condition: condition ?? undefined,
+      grade: grade ?? undefined,
+      hasCertificate: hasCertificate || undefined,
     })
       .then(setItems)
       .catch((err) => setError(err.message))
-  }, [status, category])
+  }, [status, category, year, period, material, condition, grade, hasCertificate])
 
   const searchedItems = useMemo(() => {
     if (!items) return []
@@ -136,7 +253,16 @@ export default function Browse() {
     setSearchParams(next)
   }
 
-  const activeFilterCount = (status !== 'all' ? 1 : 0) + (category ? 1 : 0)
+  const activeFilterCount =
+    (status !== 'all' ? 1 : 0) +
+    (category ? 1 : 0) +
+    (year ? 1 : 0) +
+    (period ? 1 : 0) +
+    (material ? 1 : 0) +
+    (condition ? 1 : 0) +
+    (grade ? 1 : 0) +
+    (hasCertificate ? 1 : 0)
+  const hasActiveFilters = activeFilterCount > 0
 
   return (
     <div>
@@ -174,8 +300,21 @@ export default function Browse() {
             categories={categories}
             onStatus={(v) => updateParam('status', v)}
             onCategory={(v) => updateParam('category', v)}
+            filterOptions={filterOptions}
+            year={year}
+            period={period}
+            material={material}
+            condition={condition}
+            grade={grade}
+            hasCertificate={hasCertificate}
+            onYear={(v) => updateParam('year', v)}
+            onPeriod={(v) => updateParam('period', v)}
+            onMaterial={(v) => updateParam('material', v)}
+            onCondition={(v) => updateParam('condition', v)}
+            onGrade={(v) => updateParam('grade', v)}
+            onHasCertificate={(v) => updateParam('hasCertificate', v ? 'true' : null)}
           />
-          {(status !== 'all' || category) && (
+          {hasActiveFilters && (
             <button onClick={() => setSearchParams({})} className="pt-4 text-[12.5px] font-semibold text-gray-500 hover:text-red">
               Clear all filters
             </button>
@@ -205,9 +344,22 @@ export default function Browse() {
                 categories={categories}
                 onStatus={(v) => updateParam('status', v)}
                 onCategory={(v) => updateParam('category', v)}
+                filterOptions={filterOptions}
+                year={year}
+                period={period}
+                material={material}
+                condition={condition}
+                grade={grade}
+                hasCertificate={hasCertificate}
+                onYear={(v) => updateParam('year', v)}
+                onPeriod={(v) => updateParam('period', v)}
+                onMaterial={(v) => updateParam('material', v)}
+                onCondition={(v) => updateParam('condition', v)}
+                onGrade={(v) => updateParam('grade', v)}
+                onHasCertificate={(v) => updateParam('hasCertificate', v ? 'true' : null)}
               />
               <div className="mt-5 flex gap-2.5">
-                {(status !== 'all' || category) && (
+                {hasActiveFilters && (
                   <button
                     onClick={() => setSearchParams({})}
                     className="flex-1 rounded-lg border border-royal/20 py-3 text-[13.5px] font-semibold text-charcoal"

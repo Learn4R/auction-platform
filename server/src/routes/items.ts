@@ -108,8 +108,16 @@ export function withDisplayStatus<T extends ItemWithAuction>(item: T): T & { dis
   return { ...item, displayStatus }
 }
 
+function stringFilter(value: unknown, field: string): string | undefined {
+  if (value === undefined) return undefined
+  if (typeof value !== 'string' || !value.trim()) {
+    throw new Error(`${field} must be a non-empty string`)
+  }
+  return value
+}
+
 router.get('/', async (req, res) => {
-  const { status, category } = req.query
+  const { status, category, year, period, material, condition, grade, hasCertificate } = req.query
 
   const where: Prisma.ItemWhereInput = { status: 'approved' }
 
@@ -129,6 +137,35 @@ router.get('/', async (req, res) => {
     where.auction = { status: status as AuctionStatus }
   }
 
+  try {
+    if (year !== undefined) {
+      if (typeof year !== 'string' || !year.trim() || !Number.isInteger(Number(year))) {
+        res.status(400).json({ error: 'year must be an integer' })
+        return
+      }
+      where.year = Number(year)
+    }
+    const period_ = stringFilter(period, 'period')
+    if (period_ !== undefined) where.period = period_
+    const material_ = stringFilter(material, 'material')
+    if (material_ !== undefined) where.material = material_
+    const condition_ = stringFilter(condition, 'condition')
+    if (condition_ !== undefined) where.condition = condition_
+    const grade_ = stringFilter(grade, 'grade')
+    if (grade_ !== undefined) where.grade = grade_
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : 'invalid filter' })
+    return
+  }
+
+  if (hasCertificate !== undefined) {
+    if (hasCertificate !== 'true') {
+      res.status(400).json({ error: 'hasCertificate must be "true"' })
+      return
+    }
+    where.certificateNumber = { not: null, notIn: [''] }
+  }
+
   const items = await prisma.item.findMany({
     where,
     select: itemSummarySelect,
@@ -136,6 +173,29 @@ router.get('/', async (req, res) => {
   })
 
   res.json(items.map(withDisplayStatus))
+})
+
+// Distinct real values from approved items, so filter dropdowns only ever
+// offer options that actually match something — never a guessed fixed list.
+router.get('/filter-options', async (_req, res) => {
+  const items = await prisma.item.findMany({
+    where: { status: 'approved' },
+    select: { year: true, period: true, material: true, condition: true, grade: true },
+  })
+
+  function distinctStrings(values: (string | null)[]) {
+    return [...new Set(values.filter((v): v is string => !!v && v.trim() !== ''))].sort((a, b) => a.localeCompare(b))
+  }
+
+  const years = [...new Set(items.map((i) => i.year).filter((y): y is number => y !== null))].sort((a, b) => b - a)
+
+  res.json({
+    year: years,
+    period: distinctStrings(items.map((i) => i.period)),
+    material: distinctStrings(items.map((i) => i.material)),
+    condition: distinctStrings(items.map((i) => i.condition)),
+    grade: distinctStrings(items.map((i) => i.grade)),
+  })
 })
 
 router.post('/', authenticate(), handleImageUpload, async (req, res) => {

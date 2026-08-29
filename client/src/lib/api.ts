@@ -107,12 +107,41 @@ export function getCategories() {
   return request<Category[]>('/api/categories')
 }
 
-export function getItems(filters: { status?: AuctionStatus; category?: string } = {}) {
+export interface ItemFilters {
+  status?: AuctionStatus
+  category?: string
+  year?: number
+  period?: string
+  material?: string
+  condition?: string
+  grade?: string
+  hasCertificate?: boolean
+}
+
+export function getItems(filters: ItemFilters = {}) {
   const params = new URLSearchParams()
   if (filters.status) params.set('status', filters.status)
   if (filters.category) params.set('category', filters.category)
+  if (filters.year !== undefined) params.set('year', String(filters.year))
+  if (filters.period) params.set('period', filters.period)
+  if (filters.material) params.set('material', filters.material)
+  if (filters.condition) params.set('condition', filters.condition)
+  if (filters.grade) params.set('grade', filters.grade)
+  if (filters.hasCertificate) params.set('hasCertificate', 'true')
   const query = params.toString()
   return request<ItemSummary[]>(`/api/items${query ? `?${query}` : ''}`)
+}
+
+export interface ItemFilterOptions {
+  year: number[]
+  period: string[]
+  material: string[]
+  condition: string[]
+  grade: string[]
+}
+
+export function getItemFilterOptions() {
+  return request<ItemFilterOptions>('/api/items/filter-options')
 }
 
 export function getItem(id: string) {
