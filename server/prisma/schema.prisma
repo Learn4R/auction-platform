@@ -229,6 +229,12 @@ model Order {
   shippingState        String?
   shippingPincode      String?
 
+  // Set together when an admin issues a refund — all nullable since most
+  // orders are never refunded.
+  refundReason     String?
+  refundedAt       DateTime?
+  razorpayRefundId String?
+
   review Review?
   payout Payout?
 }

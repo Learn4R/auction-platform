@@ -374,16 +374,23 @@ export interface Order {
   shippingCity: string | null
   shippingState: string | null
   shippingPincode: string | null
+  refundReason: string | null
+  refundedAt: string | null
   auction: { id: string; endTime: string; item: { id: string; title: string; category: { name: string } } }
   review: OrderReview | null
 }
 
 export interface AdminOrder extends Order {
   buyer: { id: string; name: string }
+  razorpayRefundId: string | null
 }
 
 export function getOrders(token: string) {
   return request<Order[]>('/api/orders', { token })
+}
+
+export function issueRefund(orderId: string, reason: string, token: string) {
+  return request<AdminOrder>(`/api/admin/orders/${orderId}/refund`, { method: 'POST', token, body: { reason } })
 }
 
 export interface ShippingAddressInput {

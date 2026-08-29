@@ -25,6 +25,8 @@ const orderSelect = {
   shippingCity: true,
   shippingState: true,
   shippingPincode: true,
+  refundReason: true,
+  refundedAt: true,
   auction: {
     select: {
       id: true,

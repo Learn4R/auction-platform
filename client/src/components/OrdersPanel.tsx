@@ -210,6 +210,16 @@ export function OrdersPanel() {
                     }
                   />
                 </>
+              ) : order.paymentStatus === 'refunded' ? (
+                <>
+                  <ShippingAddressSummary order={order} />
+                  <div className="mt-4 border-t border-gray-100 pt-4">
+                    <div className="mb-1 font-mono text-[10px] tracking-wider text-gray-500 uppercase">
+                      Refunded {order.refundedAt && formatDateTime(order.refundedAt)}
+                    </div>
+                    {order.refundReason && <p className="text-[13px] text-charcoal">{order.refundReason}</p>}
+                  </div>
+                </>
               ) : order.shippingAddressLine1 ? (
                 <>
                   <ShippingAddressSummary order={order} />
