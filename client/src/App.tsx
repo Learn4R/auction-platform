@@ -15,6 +15,7 @@ import AdminSettings from './pages/admin/Settings'
 import Archive from './pages/Archive'
 import Browse from './pages/Browse'
 import Dashboard from './pages/Dashboard'
+import ForgotPassword from './pages/ForgotPassword'
 import Home from './pages/Home'
 import HowItWorks from './pages/HowItWorks'
 import ItemDetail from './pages/ItemDetail'
@@ -23,6 +24,7 @@ import Login from './pages/Login'
 import MyListings from './pages/MyListings'
 import Notifications from './pages/Notifications'
 import Orders from './pages/Orders'
+import ResetPassword from './pages/ResetPassword'
 import Sell from './pages/Sell'
 import Signup from './pages/Signup'
 import Upcoming from './pages/Upcoming'
@@ -40,6 +42,8 @@ function App() {
         <Route path="legal/:slug" element={<Legal />} />
         <Route path="login" element={<Login />} />
         <Route path="signup" element={<Signup />} />
+        <Route path="forgot-password" element={<ForgotPassword />} />
+        <Route path="reset-password" element={<ResetPassword />} />
         <Route path="orders" element={<Orders />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="notifications" element={<Notifications />} />

@@ -91,19 +91,20 @@ model User {
   defaultShippingState        String?
   defaultShippingPincode      String?
 
-  items              Item[]              @relation("SellerItems")
-  bids               Bid[]
-  maxBids            MaxBid[]
-  watchlist          Watchlist[]
-  orders             Order[]             @relation("BuyerOrders")
-  wonAuctions        Auction[]           @relation("AuctionWinner")
-  adminActions       AdminAction[]
-  notifications      Notification[]
-  reviewsWritten     Review[]            @relation("ReviewsWritten")
-  reviewsReceived    Review[]            @relation("ReviewsReceived")
-  payouts            Payout[]            @relation("SellerPayouts")
-  reminders          Reminder[]
-  sellerApplications SellerApplication[]
+  items               Item[]               @relation("SellerItems")
+  bids                Bid[]
+  maxBids             MaxBid[]
+  watchlist           Watchlist[]
+  orders              Order[]              @relation("BuyerOrders")
+  wonAuctions         Auction[]            @relation("AuctionWinner")
+  adminActions        AdminAction[]
+  notifications       Notification[]
+  reviewsWritten      Review[]             @relation("ReviewsWritten")
+  reviewsReceived     Review[]             @relation("ReviewsReceived")
+  payouts             Payout[]             @relation("SellerPayouts")
+  reminders           Reminder[]
+  sellerApplications  SellerApplication[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 model Category {
@@ -331,4 +332,16 @@ model Payout {
   updatedAt        DateTime     @updatedAt
 
   @@index([sellerId, createdAt])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
 }

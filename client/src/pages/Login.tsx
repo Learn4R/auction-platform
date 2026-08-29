@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
 
 export default function Login() {
   const { login } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const notice = (location.state as { notice?: string } | null)?.notice ?? null
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -29,6 +31,12 @@ export default function Login() {
       <h1 className="mb-2 font-display text-3xl text-royal">Log In</h1>
       <p className="mb-8 text-sm text-gray-500">Sign in to bid, sell items, or manage the marketplace.</p>
 
+      {notice && (
+        <p className="mb-6 rounded-lg border border-green/30 bg-green/10 px-3.5 py-2.5 text-[13.5px] text-green">
+          {notice}
+        </p>
+      )}
+
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <label className="flex flex-col gap-1.5 text-[13px] font-semibold">
           Email
@@ -41,7 +49,12 @@ export default function Login() {
           />
         </label>
         <label className="flex flex-col gap-1.5 text-[13px] font-semibold">
-          Password
+          <span className="flex items-center justify-between">
+            Password
+            <Link to="/forgot-password" className="text-[12.5px] font-semibold text-royal hover:text-deepblue">
+              Forgot password?
+            </Link>
+          </span>
           <input
             type="password"
             required

@@ -153,6 +153,17 @@ export function login(email: string, password: string) {
   return request<{ token: string }>('/api/auth/login', { method: 'POST', body: { email, password } })
 }
 
+export function forgotPassword(email: string) {
+  return request<{ message: string; resetLink?: string }>('/api/auth/forgot-password', {
+    method: 'POST',
+    body: { email },
+  })
+}
+
+export function resetPassword(token: string, password: string) {
+  return request<{ message: string }>('/api/auth/reset-password', { method: 'POST', body: { token, password } })
+}
+
 export type RegisterableRole = 'buyer' | 'seller'
 
 export function register(data: { name: string; email: string; password: string; role: RegisterableRole }) {
