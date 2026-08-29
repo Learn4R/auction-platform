@@ -65,7 +65,7 @@ export const itemSummarySelect = {
   images: true,
   status: true,
   category: { select: { id: true, name: true, slug: true } },
-  seller: { select: { id: true, name: true } },
+  seller: { select: { id: true, name: true, verified: true } },
   auction: {
     select: {
       id: true,
@@ -97,15 +97,21 @@ type ItemWithAuction = {
 }
 
 // "Scheduled"/"Live"/"Sold"/"Unsold" for approved items, derived from the
-// existing auction data rather than stored separately.
-export function withDisplayStatus<T extends ItemWithAuction>(item: T): T & { displayStatus: string | null } {
+// existing auction data rather than stored separately. isReviewed likewise
+// reuses the item's own status rather than a separate stored flag — once an
+// item reaches 'approved' in this codebase's moderation lifecycle it never
+// transitions back out, so "is or has been approved" reduces to a direct
+// status check.
+export function withDisplayStatus<T extends ItemWithAuction>(
+  item: T,
+): T & { displayStatus: string | null; isReviewed: boolean } {
   let displayStatus: string | null = null
   if (item.status === 'approved' && item.auction) {
     if (item.auction.status === 'upcoming') displayStatus = 'Scheduled'
     else if (item.auction.status === 'live') displayStatus = 'Live'
     else if (item.auction.status === 'ended') displayStatus = item.auction.winner ? 'Sold' : 'Unsold'
   }
-  return { ...item, displayStatus }
+  return { ...item, displayStatus, isReviewed: item.status === 'approved' }
 }
 
 function stringFilter(value: unknown, field: string): string | undefined {

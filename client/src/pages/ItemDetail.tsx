@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { AuthenticityCard } from '../components/AuthenticityCard'
 import { Emblem } from '../components/Emblem'
 import { ItemSpecs } from '../components/ItemSpecs'
 import { SellerReviews } from '../components/SellerReviews'
@@ -104,12 +105,7 @@ export default function ItemDetail() {
 
           <p className="mt-6 leading-relaxed text-charcoal">{item.description}</p>
 
-          {item.provenance && (
-            <div className="mt-6">
-              <h5 className="mb-2 font-mono text-[11px] tracking-wider text-gray-500 uppercase">Provenance</h5>
-              <p className="leading-relaxed text-charcoal">{item.provenance}</p>
-            </div>
-          )}
+          <AuthenticityCard item={item} />
 
           <div className="mt-8">
             <h5 className="mb-3.5 font-mono text-[11px] tracking-wider text-gray-500 uppercase">Bid History</h5>

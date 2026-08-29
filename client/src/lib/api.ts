@@ -55,8 +55,9 @@ export interface ItemSummary {
   images: string[]
   status: ItemStatus
   displayStatus: string | null
+  isReviewed: boolean
   category: { id: string; name: string; slug: string }
-  seller: { id: string; name: string }
+  seller: { id: string; name: string; verified: boolean }
   auction: AuctionSummary | null
 }
 

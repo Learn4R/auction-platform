@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { AuthenticityCard } from '../components/AuthenticityCard'
 import { Emblem } from '../components/Emblem'
 import { ItemSpecs } from '../components/ItemSpecs'
 import { SellerReviews } from '../components/SellerReviews'
@@ -277,12 +278,7 @@ export default function LiveAuction({ state }: { state: ReturnType<typeof useIte
 
           <p className="mt-6 leading-relaxed text-charcoal">{item.description}</p>
 
-          {item.provenance && (
-            <div className="mt-6">
-              <h5 className="mb-2 font-mono text-[11px] tracking-wider text-gray-500 uppercase">Provenance</h5>
-              <p className="leading-relaxed text-charcoal">{item.provenance}</p>
-            </div>
-          )}
+          <AuthenticityCard item={item} />
 
           <SellerReviews sellerId={item.seller.id} sellerName={item.seller.name} />
         </div>
