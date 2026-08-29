@@ -356,6 +356,13 @@ export interface Order {
   shippingStatus: ShippingStatus
   razorpayOrderId: string | null
   createdAt: string
+  shippingName: string | null
+  shippingPhone: string | null
+  shippingAddressLine1: string | null
+  shippingAddressLine2: string | null
+  shippingCity: string | null
+  shippingState: string | null
+  shippingPincode: string | null
   auction: { id: string; endTime: string; item: { id: string; title: string; category: { name: string } } }
   review: OrderReview | null
 }
@@ -366,6 +373,39 @@ export interface AdminOrder extends Order {
 
 export function getOrders(token: string) {
   return request<Order[]>('/api/orders', { token })
+}
+
+export interface ShippingAddressInput {
+  name: string
+  phone: string
+  addressLine1: string
+  addressLine2?: string
+  city: string
+  state: string
+  pincode: string
+  saveAsDefault?: boolean
+}
+
+export function saveShippingAddress(orderId: string, data: ShippingAddressInput, token: string) {
+  return request<Order>(`/api/orders/${orderId}/shipping-address`, { method: 'PATCH', token, body: data })
+}
+
+export interface MyProfile {
+  id: string
+  name: string
+  email: string
+  role: Role
+  defaultShippingName: string | null
+  defaultShippingPhone: string | null
+  defaultShippingAddressLine1: string | null
+  defaultShippingAddressLine2: string | null
+  defaultShippingCity: string | null
+  defaultShippingState: string | null
+  defaultShippingPincode: string | null
+}
+
+export function getMyProfile(token: string) {
+  return request<MyProfile>('/api/auth/me', { token })
 }
 
 export function createPayment(orderId: string, token: string) {

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { PaymentStatusBadge, ShippingProgress } from '../../components/OrderStatus'
+import { ShippingAddressSummary } from '../../components/ShippingAddressSummary'
 import { getAdminOrders, updateShippingStatus, type AdminOrder, type ShippingStatus } from '../../lib/api'
 import { useAuth } from '../../lib/auth'
 import { formatCurrency, formatDateTime } from '../../lib/format'
@@ -80,7 +81,10 @@ export default function Orders() {
               </div>
 
               {order.paymentStatus === 'paid' && (
-                <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-gray-100 pt-4">
+                <div className="mt-4 flex flex-wrap items-start gap-6 border-t border-gray-100 pt-4">
+                  <div className="min-w-[220px] flex-1">
+                    <ShippingAddressSummary order={order} compact />
+                  </div>
                   <div className="min-w-[240px] flex-1">
                     <ShippingProgress status={order.shippingStatus} />
                   </div>

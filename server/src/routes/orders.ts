@@ -17,6 +17,13 @@ const orderSelect = {
   shippingStatus: true,
   razorpayOrderId: true,
   createdAt: true,
+  shippingName: true,
+  shippingPhone: true,
+  shippingAddressLine1: true,
+  shippingAddressLine2: true,
+  shippingCity: true,
+  shippingState: true,
+  shippingPincode: true,
   auction: {
     select: {
       id: true,
@@ -41,6 +48,71 @@ router.get('/', authenticate(), async (req, res) => {
   res.json(orders)
 })
 
+const PINCODE_REGEX = /^[0-9]{6}$/
+
+router.patch<{ id: string }>('/:id/shipping-address', authenticate(), async (req, res) => {
+  const { name, phone, addressLine1, addressLine2, city, state, pincode, saveAsDefault } = req.body ?? {}
+
+  const required: Record<string, unknown> = { name, phone, addressLine1, city, state, pincode }
+  for (const [field, value] of Object.entries(required)) {
+    if (typeof value !== 'string' || !value.trim()) {
+      res.status(400).json({ error: `${field} is required` })
+      return
+    }
+  }
+  if (addressLine2 !== undefined && addressLine2 !== null && typeof addressLine2 !== 'string') {
+    res.status(400).json({ error: 'addressLine2 must be a string' })
+    return
+  }
+  if (!PINCODE_REGEX.test((pincode as string).trim())) {
+    res.status(400).json({ error: 'pincode must be a 6-digit Indian PIN code' })
+    return
+  }
+
+  const order = await prisma.order.findUnique({ where: { id: req.params.id } })
+  if (!order) {
+    res.status(404).json({ error: 'order not found' })
+    return
+  }
+  if (order.buyerId !== req.user!.id) {
+    res.status(403).json({ error: 'this is not your order' })
+    return
+  }
+
+  const addressData = {
+    shippingName: (name as string).trim(),
+    shippingPhone: (phone as string).trim(),
+    shippingAddressLine1: (addressLine1 as string).trim(),
+    shippingAddressLine2: addressLine2 ? (addressLine2 as string).trim() : null,
+    shippingCity: (city as string).trim(),
+    shippingState: (state as string).trim(),
+    shippingPincode: (pincode as string).trim(),
+  }
+
+  const updated = await prisma.order.update({
+    where: { id: order.id },
+    data: addressData,
+    select: orderSelect,
+  })
+
+  if (saveAsDefault === true) {
+    await prisma.user.update({
+      where: { id: req.user!.id },
+      data: {
+        defaultShippingName: addressData.shippingName,
+        defaultShippingPhone: addressData.shippingPhone,
+        defaultShippingAddressLine1: addressData.shippingAddressLine1,
+        defaultShippingAddressLine2: addressData.shippingAddressLine2,
+        defaultShippingCity: addressData.shippingCity,
+        defaultShippingState: addressData.shippingState,
+        defaultShippingPincode: addressData.shippingPincode,
+      },
+    })
+  }
+
+  res.json(updated)
+})
+
 router.post<{ id: string }>('/:id/create-payment', authenticate(), async (req, res) => {
   const order = await prisma.order.findUnique({ where: { id: req.params.id } })
   if (!order) {
@@ -53,6 +125,10 @@ router.post<{ id: string }>('/:id/create-payment', authenticate(), async (req, r
   }
   if (order.paymentStatus === 'paid') {
     res.status(409).json({ error: 'order is already paid' })
+    return
+  }
+  if (!order.shippingName || !order.shippingAddressLine1 || !order.shippingCity || !order.shippingState || !order.shippingPincode) {
+    res.status(400).json({ error: 'Please add a shipping address before proceeding to payment.' })
     return
   }
 

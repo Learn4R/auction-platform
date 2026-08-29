@@ -79,8 +79,30 @@ router.post('/login', authLimiter, async (req, res) => {
   res.json({ token })
 })
 
-router.get('/me', authenticate(), (req, res) => {
-  res.json({ user: req.user })
+router.get('/me', authenticate(), async (req, res) => {
+  const user = await prisma.user.findUnique({
+    where: { id: req.user!.id },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      defaultShippingName: true,
+      defaultShippingPhone: true,
+      defaultShippingAddressLine1: true,
+      defaultShippingAddressLine2: true,
+      defaultShippingCity: true,
+      defaultShippingState: true,
+      defaultShippingPincode: true,
+    },
+  })
+
+  if (!user) {
+    res.status(404).json({ error: 'user not found' })
+    return
+  }
+
+  res.json(user)
 })
 
 export default router

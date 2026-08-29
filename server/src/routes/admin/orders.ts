@@ -13,6 +13,13 @@ export const orderSelect = {
   paymentStatus: true,
   shippingStatus: true,
   createdAt: true,
+  shippingName: true,
+  shippingPhone: true,
+  shippingAddressLine1: true,
+  shippingAddressLine2: true,
+  shippingCity: true,
+  shippingState: true,
+  shippingPincode: true,
   buyer: { select: { id: true, name: true } },
   auction: {
     select: {

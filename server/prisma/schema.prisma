@@ -81,6 +81,16 @@ model User {
   sellerStatus SellerStatus @default(none)
   createdAt    DateTime     @default(now())
 
+  // Pre-fill convenience for future orders' shipping-address form — not
+  // used for anything else, so all optional.
+  defaultShippingName         String?
+  defaultShippingPhone        String?
+  defaultShippingAddressLine1 String?
+  defaultShippingAddressLine2 String?
+  defaultShippingCity         String?
+  defaultShippingState        String?
+  defaultShippingPincode      String?
+
   items              Item[]              @relation("SellerItems")
   bids               Bid[]
   maxBids            MaxBid[]
@@ -207,6 +217,16 @@ model Order {
   razorpayOrderId   String?
   razorpayPaymentId String?
   createdAt         DateTime       @default(now())
+
+  // Required before payment can proceed — nullable since existing orders
+  // predate this and a fresh order starts without one.
+  shippingName         String?
+  shippingPhone        String?
+  shippingAddressLine1 String?
+  shippingAddressLine2 String?
+  shippingCity         String?
+  shippingState        String?
+  shippingPincode      String?
 
   review Review?
   payout Payout?

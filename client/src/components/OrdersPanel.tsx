@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { createPayment, getOrders, submitReview, verifyPayment, type Order } from '../lib/api'
+import { createPayment, getMyProfile, getOrders, submitReview, verifyPayment, type MyProfile, type Order } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { formatCurrency, formatDateTime } from '../lib/format'
 import { loadRazorpayScript, openRazorpayCheckout } from '../lib/razorpay'
 import { PaymentStatusBadge, ShippingProgress } from './OrderStatus'
+import { ShippingAddressForm } from './ShippingAddressForm'
+import { ShippingAddressSummary } from './ShippingAddressSummary'
 import { StarRatingDisplay, StarRatingInput } from './StarRating'
 
 function ReviewSection({ order, onSubmitted }: { order: Order; onSubmitted: (order: Order) => void }) {
@@ -90,6 +92,7 @@ function ReviewSection({ order, onSubmitted }: { order: Order; onSubmitted: (ord
 export function OrdersPanel() {
   const { token } = useAuth()
   const [orders, setOrders] = useState<Order[] | null>(null)
+  const [profile, setProfile] = useState<MyProfile | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [payingId, setPayingId] = useState<string | null>(null)
   const [payError, setPayError] = useState<string | null>(null)
@@ -99,7 +102,14 @@ export function OrdersPanel() {
     getOrders(token)
       .then(setOrders)
       .catch((err) => setError(err.message))
+    getMyProfile(token)
+      .then(setProfile)
+      .catch(() => {})
   }, [token])
+
+  function handleAddressSaved(updated: Order) {
+    setOrders((prev) => (prev ? prev.map((o) => (o.id === updated.id ? updated : o)) : prev))
+  }
 
   async function handlePay(order: Order) {
     if (!token) return
@@ -186,6 +196,7 @@ export function OrdersPanel() {
 
               {order.paymentStatus === 'paid' ? (
                 <>
+                  <ShippingAddressSummary order={order} />
                   <div className="mt-5 border-t border-gray-100 pt-4">
                     <div className="mb-3 font-mono text-[10px] tracking-wider text-gray-500 uppercase">
                       Shipping Status
@@ -199,16 +210,21 @@ export function OrdersPanel() {
                     }
                   />
                 </>
+              ) : order.shippingAddressLine1 ? (
+                <>
+                  <ShippingAddressSummary order={order} />
+                  <div className="mt-4 border-t border-gray-100 pt-4">
+                    <button
+                      onClick={() => handlePay(order)}
+                      disabled={payingId === order.id}
+                      className="rounded-lg bg-royal px-5 py-2.5 text-[13.5px] font-semibold text-white transition hover:bg-deepblue disabled:opacity-50"
+                    >
+                      {payingId === order.id ? 'Opening checkout…' : 'Pay Now'}
+                    </button>
+                  </div>
+                </>
               ) : (
-                <div className="mt-4 border-t border-gray-100 pt-4">
-                  <button
-                    onClick={() => handlePay(order)}
-                    disabled={payingId === order.id}
-                    className="rounded-lg bg-royal px-5 py-2.5 text-[13.5px] font-semibold text-white transition hover:bg-deepblue disabled:opacity-50"
-                  >
-                    {payingId === order.id ? 'Opening checkout…' : 'Pay Now'}
-                  </button>
-                </div>
+                <ShippingAddressForm order={order} defaultAddress={profile} onSaved={handleAddressSaved} />
               )}
             </div>
           ))}
