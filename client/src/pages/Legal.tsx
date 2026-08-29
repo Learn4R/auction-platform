@@ -35,7 +35,7 @@ export default function Legal() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-14">
+    <div className="mx-auto max-w-prose px-6 py-14">
       <h1 className="mb-1.5 font-display text-3xl text-royal">{page.title}</h1>
       <p className="mb-9 font-mono text-[11px] text-gray-500">Last updated {formatDateTime(page.updatedAt)}</p>
       <LegalContent content={page.content} />

@@ -95,7 +95,7 @@ export default function ItemDetail() {
               {item.title}
             </h1>
             <div className="font-mono text-xs text-gray-500">
-              {item.category.name} · Sold by {item.seller.name}
+              {item.category.name} · Listed by {item.seller.name}
             </div>
           </div>
 

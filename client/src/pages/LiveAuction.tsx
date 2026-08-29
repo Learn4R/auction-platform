@@ -95,7 +95,7 @@ export default function LiveAuction({ state }: { state: ReturnType<typeof useIte
 
           <h1 className="mb-1.5 font-display text-[clamp(26px,3.4vw,36px)] font-medium text-white">{item.title}</h1>
           <div className="mb-6 font-mono text-xs text-white/60">
-            {item.category.name} · Sold by {item.seller.name}
+            {item.category.name} · Listed by {item.seller.name}
           </div>
 
           {notice && (

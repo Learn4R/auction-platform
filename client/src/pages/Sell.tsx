@@ -15,6 +15,7 @@ import {
   type SellerApplicationInput,
 } from '../lib/api'
 import { useAuth } from '../lib/auth'
+import { formatCurrency, formatDateTime } from '../lib/format'
 
 export default function Sell() {
   const { token } = useAuth()
@@ -723,10 +724,10 @@ function ReviewStep({ form, images, categoryName }: { form: ItemForm; images: Im
     ['Grading Company', form.gradingCompany || '—'],
     ['Certificate Number', form.certificateNumber || '—'],
     ['Provenance', form.provenance || '—'],
-    ['Starting Bid', form.startingBid ? `₹${form.startingBid}` : '—'],
-    ['Bid Increment', form.bidIncrement ? `₹${form.bidIncrement}` : '—'],
-    ['Start Time', form.startTime || '—'],
-    ['End Time', form.endTime || '—'],
+    ['Starting Bid', form.startingBid ? formatCurrency(form.startingBid) : '—'],
+    ['Bid Increment', form.bidIncrement ? formatCurrency(form.bidIncrement) : '—'],
+    ['Start Time', form.startTime ? formatDateTime(form.startTime) : '—'],
+    ['End Time', form.endTime ? formatDateTime(form.endTime) : '—'],
   ]
 
   return (
