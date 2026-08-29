@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { prisma } from '../lib/prisma.js'
 import { authenticate } from '../middleware/auth.js'
+import { watchlistLimiter } from '../middleware/rateLimit.js'
 import { itemSummarySelect } from './items.js'
 
 const router = Router()
@@ -14,7 +15,7 @@ router.get('/', authenticate(), async (req, res) => {
   res.json(entries.map((e) => e.item))
 })
 
-router.post<{ itemId: string }>('/:itemId', authenticate(), async (req, res) => {
+router.post<{ itemId: string }>('/:itemId', authenticate(), watchlistLimiter, async (req, res) => {
   const { itemId } = req.params
   const userId = req.user!.id
 

@@ -5,6 +5,7 @@ import { prisma } from '../lib/prisma.js'
 import { getRazorpay } from '../lib/razorpay.js'
 import { getSellerCommissionPercent } from '../lib/settings.js'
 import { authenticate } from '../middleware/auth.js'
+import { reviewLimiter } from '../middleware/rateLimit.js'
 
 const router = Router()
 
@@ -227,7 +228,7 @@ router.post<{ id: string }>('/:id/verify-payment', authenticate(), async (req, r
   res.json(updated)
 })
 
-router.post<{ id: string }>('/:id/review', authenticate(), async (req, res) => {
+router.post<{ id: string }>('/:id/review', authenticate(), reviewLimiter, async (req, res) => {
   const { rating, comment } = req.body ?? {}
 
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) {

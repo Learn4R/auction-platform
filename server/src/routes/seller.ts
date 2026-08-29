@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { prisma } from '../lib/prisma.js'
 import { authenticate } from '../middleware/auth.js'
+import { itemLimiter } from '../middleware/rateLimit.js'
 import { deleteItemImages, storagePathFromUrl, uploadItemImage } from '../lib/supabaseStorage.js'
 import { handleImageUpload, itemWithProposalSelect, withDisplayStatus } from './items.js'
 
@@ -196,7 +197,7 @@ router.get('/dashboard-summary', authenticate(), async (req, res) => {
   })
 })
 
-router.post('/items/draft', authenticate(), handleImageUpload, async (req, res) => {
+router.post('/items/draft', authenticate(), itemLimiter, handleImageUpload, async (req, res) => {
   if (!(await requireApprovedSeller(req, res))) return
 
   const parsed = parseDraftFields(req.body ?? {})
@@ -241,7 +242,7 @@ router.post('/items/draft', authenticate(), handleImageUpload, async (req, res) 
   }
 })
 
-router.patch<{ id: string }>('/items/:id', authenticate(), handleImageUpload, async (req, res) => {
+router.patch<{ id: string }>('/items/:id', authenticate(), itemLimiter, handleImageUpload, async (req, res) => {
   if (!(await requireApprovedSeller(req, res))) return
 
   const item = await prisma.item.findUnique({ where: { id: req.params.id } })

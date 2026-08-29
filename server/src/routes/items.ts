@@ -3,7 +3,9 @@ import type { NextFunction, Request, Response } from 'express'
 import { Router } from 'express'
 import multer from 'multer'
 import { prisma } from '../lib/prisma.js'
+import { isGenuineImage } from '../lib/imageValidation.js'
 import { authenticate } from '../middleware/auth.js'
+import { itemLimiter } from '../middleware/rateLimit.js'
 import { deleteItemImages, uploadItemImage } from '../lib/supabaseStorage.js'
 
 const router = Router()
@@ -11,12 +13,18 @@ const router = Router()
 export const MAX_IMAGES = 6
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024
 
+// SVG is rejected outright regardless of what mimetype the client declares —
+// it's XML, not a raster image, and can carry executable script content.
+// Every other declared image/* mimetype still gets its actual bytes
+// verified below, since a client can lie about mimetype either way.
+const BLOCKED_MIME_TYPES = new Set(['image/svg+xml'])
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: MAX_IMAGE_BYTES, files: MAX_IMAGES },
   fileFilter: (_req, file, cb) => {
-    if (!file.mimetype.startsWith('image/')) {
-      cb(new Error('Only image files are allowed'))
+    if (!file.mimetype.startsWith('image/') || BLOCKED_MIME_TYPES.has(file.mimetype)) {
+      cb(new Error('Only JPEG, PNG, GIF, or WebP images are allowed'))
       return
     }
     cb(null, true)
@@ -25,23 +33,36 @@ const upload = multer({
 
 export function handleImageUpload(req: Request, res: Response, next: NextFunction) {
   upload.array('images', MAX_IMAGES)(req, res, (err: unknown) => {
-    if (!err) {
-      next()
-      return
-    }
-    if (err instanceof multer.MulterError) {
-      if (err.code === 'LIMIT_FILE_SIZE') {
-        res.status(400).json({ error: `Each image must be ${MAX_IMAGE_BYTES / (1024 * 1024)}MB or smaller` })
+    if (err) {
+      if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          res.status(400).json({ error: `Each image must be ${MAX_IMAGE_BYTES / (1024 * 1024)}MB or smaller` })
+          return
+        }
+        if (err.code === 'LIMIT_FILE_COUNT') {
+          res.status(400).json({ error: `You can upload up to ${MAX_IMAGES} images` })
+          return
+        }
+        res.status(400).json({ error: err.message })
         return
       }
-      if (err.code === 'LIMIT_FILE_COUNT') {
-        res.status(400).json({ error: `You can upload up to ${MAX_IMAGES} images` })
-        return
-      }
-      res.status(400).json({ error: err.message })
+      res.status(400).json({ error: err instanceof Error ? err.message : 'Image upload failed' })
       return
     }
-    res.status(400).json({ error: err instanceof Error ? err.message : 'Image upload failed' })
+
+    // Belt-and-suspenders past the mimetype check above: verify each file's
+    // actual byte signature matches a genuine raster image format. Catches
+    // e.g. an SVG (or any other non-image file) renamed with a forged
+    // image/jpeg Content-Type, which fileFilter alone can't detect.
+    const files = (req.files as Express.Multer.File[] | undefined) ?? []
+    for (const file of files) {
+      if (!isGenuineImage(file.buffer)) {
+        res.status(400).json({ error: `"${file.originalname}" is not a valid JPEG, PNG, GIF, or WebP image` })
+        return
+      }
+    }
+
+    next()
   })
 }
 
@@ -204,7 +225,7 @@ router.get('/filter-options', async (_req, res) => {
   })
 })
 
-router.post('/', authenticate(), handleImageUpload, async (req, res) => {
+router.post('/', authenticate(), itemLimiter, handleImageUpload, async (req, res) => {
   if (req.user!.role !== 'admin') {
     const seller = await prisma.user.findUnique({ where: { id: req.user!.id }, select: { sellerStatus: true } })
     if (seller?.sellerStatus !== 'approved') {

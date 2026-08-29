@@ -2,6 +2,7 @@ import { createServer } from 'node:http'
 import 'dotenv/config'
 import cors from 'cors'
 import express from 'express'
+import helmet from 'helmet'
 import adminRouter from './routes/admin/index.js'
 import archiveRouter from './routes/archive.js'
 import auctionsRouter from './routes/auctions.js'
@@ -16,6 +17,7 @@ import ordersRouter from './routes/orders.js'
 import sellerRouter from './routes/seller.js'
 import sellersRouter from './routes/sellers.js'
 import watchlistRouter from './routes/watchlist.js'
+import { adminLimiter } from './middleware/rateLimit.js'
 import { initSocket } from './realtime/io.js'
 import { startAuctionScheduler } from './realtime/scheduler.js'
 import { ensureItemImagesBucket } from './lib/supabaseStorage.js'
@@ -29,6 +31,7 @@ const clientUrl = process.env.CLIENT_URL ?? 'http://localhost:5173'
 // IP-based rate limiting to work correctly once deployed.
 app.set('trust proxy', 1)
 
+app.use(helmet())
 app.use(cors({ origin: clientUrl }))
 app.use(express.json())
 
@@ -41,7 +44,7 @@ app.use('/api/items', itemsRouter)
 app.use('/api/categories', categoriesRouter)
 app.use('/api/seller', sellerRouter)
 app.use('/api/sellers', sellersRouter)
-app.use('/api/admin', adminRouter)
+app.use('/api/admin', adminLimiter, adminRouter)
 app.use('/api/auctions', auctionsRouter)
 app.use('/api/orders', ordersRouter)
 app.use('/api/archive', archiveRouter)
@@ -50,6 +53,22 @@ app.use('/api/bids', bidsRouter)
 app.use('/api/dashboard', dashboardRouter)
 app.use('/api/notifications', notificationsRouter)
 app.use('/api/legal', legalRouter)
+
+// Catch-all error handler — must be registered last, and must take all four
+// parameters (that arity is what tells Express to treat it as an error
+// handler rather than another route middleware). Express 5 automatically
+// forwards a rejected promise from any async route handler here, so this
+// covers both thrown errors and rejected async handlers project-wide.
+// Logs with enough context to actually debug from, and never echoes the
+// raw error/stack back to the client.
+app.use((err: unknown, req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  const message = err instanceof Error ? err.message : String(err)
+  console.error(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl} -> ${message}`)
+  if (err instanceof Error && err.stack) console.error(err.stack)
+
+  if (res.headersSent) return
+  res.status(500).json({ error: 'Something went wrong. Please try again.' })
+})
 
 const httpServer = createServer(app)
 initSocket(httpServer, clientUrl)
