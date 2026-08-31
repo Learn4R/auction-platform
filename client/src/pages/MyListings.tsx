@@ -105,8 +105,8 @@ function KpiCards({ summary }: { summary: SellerDashboardSummary }) {
     { label: 'Active Auctions', value: summary.activeAuctions },
     { label: 'Sold Items', value: summary.soldItems },
     { label: 'Unsold Items', value: summary.unsoldItems },
-    { label: 'Earnings', value: formatCurrency(summary.earnings) },
-    { label: 'Pending Payout', value: formatCurrency(summary.pendingPayout) },
+    { label: 'Earnings', value: formatCurrency(summary.earnings), hint: 'Payouts already paid out to you' },
+    { label: 'Pending Payout', value: formatCurrency(summary.pendingPayout), hint: 'Payouts not yet paid out' },
   ]
 
   return (
@@ -115,6 +115,7 @@ function KpiCards({ summary }: { summary: SellerDashboardSummary }) {
         <div key={card.label} className="rounded-xl border border-gold/40 bg-white p-4">
           <div className="font-mono text-[9.5px] tracking-wider text-gray-500 uppercase">{card.label}</div>
           <div className="mt-1 font-mono text-xl font-semibold text-royal">{card.value}</div>
+          {card.hint && <div className="mt-1 text-[10.5px] text-gray-400">{card.hint}</div>}
         </div>
       ))}
     </div>

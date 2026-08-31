@@ -5,7 +5,6 @@ type SpecItem = Pick<
   | 'category'
   | 'year'
   | 'material'
-  | 'condition'
   | 'denomination'
   | 'mint'
   | 'rulerAuthority'
@@ -29,7 +28,6 @@ export function ItemSpecs({ item }: { item: SpecItem }) {
   if (item.material) rows.push(['Material', item.material])
   if (item.weight) rows.push(['Weight', item.weight])
   if (item.diameter) rows.push(['Diameter', item.diameter])
-  if (item.condition) rows.push(['Condition', item.condition])
   if (item.grade) rows.push(['Grade', item.grade])
   if (item.gradingCompany) rows.push(['Grading Company', item.gradingCompany])
   if (item.certificateNumber) rows.push(['Certificate Number', item.certificateNumber])

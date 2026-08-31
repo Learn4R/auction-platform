@@ -289,6 +289,7 @@ function ItemSubmissionForm({ editItem }: { editItem: ItemSubmission | null }) {
     (editItem?.images ?? []).map((url): ImagePick => ({ kind: 'existing', url })),
   )
   const [imageError, setImageError] = useState<string | null>(null)
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null)
   const [step, setStep] = useState(1)
   const [stepError, setStepError] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -556,12 +557,19 @@ function ItemSubmissionForm({ editItem }: { editItem: ItemSubmission | null }) {
           <Field label={`Photos (up to ${MAX_IMAGES}, 5MB each)`}>
             <div className="flex flex-wrap gap-3">
               {images.map((img, i) => (
-                <div key={img.kind === 'existing' ? img.url : img.previewUrl} className="group relative h-20 w-20 flex-none overflow-hidden rounded-lg border border-royal/15">
-                  <img src={imageSrc(img)} alt="" className="h-full w-full object-cover" />
+                <div key={img.kind === 'existing' ? img.url : img.previewUrl} className="group relative h-36 w-36 flex-none overflow-hidden rounded-lg border border-royal/15">
+                  <button
+                    type="button"
+                    onClick={() => setLightboxSrc(imageSrc(img))}
+                    className="block h-full w-full cursor-zoom-in"
+                    aria-label="View full-size image"
+                  >
+                    <img src={imageSrc(img)} alt="" className="h-full w-full object-cover" />
+                  </button>
                   <button
                     type="button"
                     onClick={() => removeImage(i)}
-                    className="absolute top-0.5 right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-charcoal/70 text-[11px] font-bold text-white opacity-0 transition group-hover:opacity-100"
+                    className="absolute top-1 right-1 flex h-6 w-6 items-center justify-center rounded-full bg-charcoal/70 text-[13px] font-bold text-white opacity-0 transition group-hover:opacity-100"
                     aria-label="Remove image"
                   >
                     ×
@@ -572,10 +580,10 @@ function ItemSubmissionForm({ editItem }: { editItem: ItemSubmission | null }) {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex h-20 w-20 flex-none flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-royal/25 text-gray-400 transition hover:border-royal/50 hover:text-royal"
+                  className="flex h-36 w-36 flex-none flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-royal/25 text-gray-400 transition hover:border-royal/50 hover:text-royal"
                 >
-                  <span className="text-xl leading-none">+</span>
-                  <span className="text-[10px] font-semibold">Add</span>
+                  <span className="text-2xl leading-none">+</span>
+                  <span className="text-[11px] font-semibold">Add</span>
                 </button>
               )}
             </div>
@@ -684,6 +692,23 @@ function ItemSubmissionForm({ editItem }: { editItem: ItemSubmission | null }) {
           </div>
         </div>
       </div>
+
+      {lightboxSrc && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-charcoal/90 p-8"
+          onClick={() => setLightboxSrc(null)}
+        >
+          <button
+            type="button"
+            onClick={() => setLightboxSrc(null)}
+            className="absolute top-5 right-5 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-xl font-bold text-white transition hover:bg-white/20"
+            aria-label="Close"
+          >
+            ×
+          </button>
+          <img src={lightboxSrc} alt="" className="max-h-full max-w-full rounded-lg object-contain" />
+        </div>
+      )}
     </div>
   )
 }

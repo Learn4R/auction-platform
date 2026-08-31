@@ -185,7 +185,9 @@ export default function Home() {
                   </div>
                   <div>
                     <div className="font-display text-[15px] leading-tight font-medium">{cat.name}</div>
-                    <div className="mt-1 font-mono text-[10.5px] text-gray-500">{cat.itemCount} lots</div>
+                    <div className="mt-1 font-mono text-[10.5px] text-gray-500">
+                      {cat.itemCount} lot{cat.itemCount === 1 ? '' : 's'}
+                    </div>
                   </div>
                 </Link>
               ))}
