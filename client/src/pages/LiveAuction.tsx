@@ -253,7 +253,7 @@ export default function LiveAuction({ state }: { state: ReturnType<typeof useIte
                 className="h-full w-full object-cover"
               />
             ) : (
-              <Emblem className="h-3/5 w-3/5" />
+              <Emblem item={item} className="h-3/5 w-3/5" />
             )}
           </div>
           {item.images.length > 1 && (

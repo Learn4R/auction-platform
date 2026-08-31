@@ -15,7 +15,7 @@ function ArchiveCard({ entry }: { entry: ArchiveEntry }) {
         {entry.images.length > 0 ? (
           <img src={entry.images[0]} alt={entry.title} className="h-full w-full object-cover" />
         ) : (
-          <Emblem className="h-2/3 w-2/3" />
+          <Emblem item={entry} className="h-2/3 w-2/3" />
         )}
         <div className="absolute top-3 left-3">
           <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 font-mono text-[10.5px] font-semibold tracking-wider text-gray-500 uppercase">

@@ -61,7 +61,7 @@ export default function Upcoming() {
                 {item.images.length > 0 ? (
                   <img src={item.images[0]} alt={item.title} className="h-full w-full object-cover" />
                 ) : (
-                  <Emblem className="h-2/3 w-2/3" />
+                  <Emblem item={item} className="h-2/3 w-2/3" />
                 )}
                 <WatchlistButton itemId={item.id} className="absolute top-2.5 right-2.5" />
               </Link>

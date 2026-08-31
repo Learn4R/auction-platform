@@ -563,6 +563,11 @@ export interface ArchiveEntry {
   year: number | null
   material: string | null
   condition: string | null
+  denomination: string | null
+  rulerAuthority: string | null
+  period: string | null
+  certificateNumber: string | null
+  gradingCompany: string | null
   images: string[]
   category: { id: string; name: string; slug: string }
   seller: { id: string; name: string }

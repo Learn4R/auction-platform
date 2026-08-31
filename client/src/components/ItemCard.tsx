@@ -32,7 +32,7 @@ export function ItemCard({
           {item.images.length > 0 ? (
             <img src={item.images[0]} alt={item.title} className="h-full w-full object-cover" />
           ) : (
-            <Emblem className="h-2/3 w-2/3" />
+            <Emblem item={item} className="h-2/3 w-2/3" />
           )}
           {auction && (
             <div className="absolute top-3 left-3">

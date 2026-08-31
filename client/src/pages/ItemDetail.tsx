@@ -61,7 +61,7 @@ export default function ItemDetail() {
                 className="h-full w-full object-cover"
               />
             ) : (
-              <Emblem className="h-3/5 w-3/5" />
+              <Emblem item={item} className="h-3/5 w-3/5" />
             )}
             <WatchlistButton itemId={item.id} className="absolute top-3 right-3" />
           </div>
