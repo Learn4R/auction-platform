@@ -2,8 +2,8 @@ import crypto from 'node:crypto'
 import { Router } from 'express'
 import { Prisma } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
+import { markOrderPaid } from '../lib/orderPayment.js'
 import { getRazorpay } from '../lib/razorpay.js'
-import { getSellerCommissionPercent } from '../lib/settings.js'
 import { authenticate } from '../middleware/auth.js'
 import { reviewLimiter } from '../middleware/rateLimit.js'
 
@@ -198,35 +198,9 @@ router.post<{ id: string }>('/:id/verify-payment', authenticate(), async (req, r
     return
   }
 
-  const wasAlreadyPaid = order.paymentStatus === 'paid'
+  await markOrderPaid(order.id, razorpay_payment_id)
 
-  const updated = await prisma.$transaction(async (tx) => {
-    const result = await tx.order.update({
-      where: { id: order.id },
-      data: { paymentStatus: 'paid', razorpayPaymentId: razorpay_payment_id },
-      select: orderSelect,
-    })
-
-    if (!wasAlreadyPaid) {
-      const commissionPercent = await getSellerCommissionPercent(tx)
-      const gross = Number(order.winningBid)
-      const commissionAmount = Math.round(gross * (commissionPercent / 100) * 100) / 100
-      const netAmount = gross - commissionAmount
-
-      await tx.payout.create({
-        data: {
-          sellerId: order.auction.item.sellerId,
-          orderId: order.id,
-          grossAmount: gross,
-          commissionAmount,
-          netAmount,
-        },
-      })
-    }
-
-    return result
-  })
-
+  const updated = await prisma.order.findUnique({ where: { id: order.id }, select: orderSelect })
   res.json(updated)
 })
 

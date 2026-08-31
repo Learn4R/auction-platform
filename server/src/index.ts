@@ -17,6 +17,7 @@ import ordersRouter from './routes/orders.js'
 import sellerRouter from './routes/seller.js'
 import sellersRouter from './routes/sellers.js'
 import watchlistRouter from './routes/watchlist.js'
+import webhooksRouter from './routes/webhooks.js'
 import { adminLimiter } from './middleware/rateLimit.js'
 import { initSocket } from './realtime/io.js'
 import { startAuctionScheduler } from './realtime/scheduler.js'
@@ -33,6 +34,13 @@ app.set('trust proxy', 1)
 
 app.use(helmet())
 app.use(cors({ origin: clientUrl }))
+
+// Mounted before express.json() and given its own express.raw() body
+// parser: the Razorpay webhook signature is an HMAC over the exact raw
+// request bytes, so this path must never be touched by the JSON parser
+// below — once that runs, the original bytes are gone.
+app.use('/api/webhooks', express.raw({ type: 'application/json' }), webhooksRouter)
+
 app.use(express.json())
 
 app.get('/', (_req, res) => {
