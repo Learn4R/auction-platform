@@ -75,10 +75,10 @@ export default function SellerApplications() {
             <div key={app.id} className="rounded-xl border border-royal/10 bg-white p-5">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <div className="font-mono text-[10px] tracking-wider text-deepblue uppercase">
+                  <h3 className="font-display text-lg font-medium text-charcoal">{app.fullName}</h3>
+                  <div className="mt-1 font-mono text-[11px] text-gray-500">
                     {app.user.email} · applied {formatDateTime(app.createdAt)}
                   </div>
-                  <h3 className="mt-1 font-display text-lg font-medium text-charcoal">{app.fullName}</h3>
                   <div className="mt-1 text-[13px] text-gray-500">Account: {app.user.name}</div>
                 </div>
                 <div className="flex flex-shrink-0 gap-2">

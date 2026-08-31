@@ -44,49 +44,39 @@ export default function Sellers() {
           <h4 className="mb-2 font-display text-lg text-royal">No sellers yet</h4>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-royal/10 bg-white">
-          <table className="w-full text-left text-[13.5px]">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50 font-mono text-[10.5px] tracking-wider text-gray-500 uppercase">
-                <th className="px-5 py-3">Seller</th>
-                <th className="px-5 py-3">Email</th>
-                <th className="px-5 py-3">Items</th>
-                <th className="px-5 py-3">Joined</th>
-                <th className="px-5 py-3">Status</th>
-                <th className="px-5 py-3"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {sellers.map((seller) => (
-                <tr key={seller.id} className="border-b border-gray-100 last:border-b-0">
-                  <td className="px-5 py-3.5 font-medium text-charcoal">{seller.name}</td>
-                  <td className="px-5 py-3.5 text-gray-500">{seller.email}</td>
-                  <td className="px-5 py-3.5 font-mono text-gray-500">{seller.itemCount}</td>
-                  <td className="px-5 py-3.5 font-mono text-[11.5px] text-gray-500">
-                    {formatDateTime(seller.createdAt)}
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <span
-                      className={`inline-flex items-center rounded-full px-2.5 py-1 font-mono text-[10.5px] font-semibold tracking-wider uppercase ${
-                        seller.verified ? 'bg-green/10 text-green' : 'bg-gray-100 text-gray-500'
-                      }`}
-                    >
-                      {seller.verified ? 'Verified' : 'Unverified'}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3.5 text-right">
-                    <button
-                      onClick={() => handleToggle(seller.id)}
-                      disabled={busyId === seller.id}
-                      className="rounded-lg px-2.5 py-1.5 text-[12.5px] font-semibold text-royal hover:bg-royal/5 hover:text-deepblue disabled:opacity-50"
-                    >
-                      {seller.verified ? 'Unverify' : 'Verify'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="flex flex-col gap-4">
+          {sellers.map((seller) => (
+            <div key={seller.id} className="rounded-xl border border-royal/10 bg-white p-5">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <h3 className="font-display text-lg font-medium text-charcoal">{seller.name}</h3>
+                  <div className="mt-1 font-mono text-[11px] text-gray-500">
+                    {seller.email} · joined {formatDateTime(seller.createdAt)}
+                  </div>
+                </div>
+                <span
+                  className={`inline-flex flex-shrink-0 items-center rounded-full px-2.5 py-1 font-mono text-[10.5px] font-semibold tracking-wider uppercase ${
+                    seller.verified ? 'bg-green/10 text-green' : 'bg-gray-100 text-gray-500'
+                  }`}
+                >
+                  {seller.verified ? 'Verified' : 'Unverified'}
+                </span>
+              </div>
+
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4">
+                <span className="font-mono text-[12px] text-gray-500">
+                  Items listed: <b className="text-charcoal">{seller.itemCount}</b>
+                </span>
+                <button
+                  onClick={() => handleToggle(seller.id)}
+                  disabled={busyId === seller.id}
+                  className="rounded-lg border border-royal/20 px-4 py-2 text-[13px] font-semibold text-royal transition hover:bg-royal/5 hover:text-deepblue disabled:opacity-50"
+                >
+                  {seller.verified ? 'Unverify' : 'Verify'}
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

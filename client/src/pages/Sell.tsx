@@ -474,9 +474,12 @@ function ItemSubmissionForm({ editItem }: { editItem: ItemSubmission | null }) {
   }
 
   const selectedCategory = categories.find((c) => c.id === form.categoryId)
+  const isShortStep = step === 1 || step === 3
 
   return (
-    <div className="mx-auto max-w-2xl px-6 py-14">
+    <div
+      className={`mx-auto max-w-2xl px-6 py-14 ${isShortStep ? 'md:flex md:flex-1 md:flex-col md:justify-center md:py-10' : ''}`}
+    >
       <h1 className="mb-2 font-display text-3xl text-royal">{isEditing ? 'Edit & Resubmit Item' : 'Sell an Item'}</h1>
       <p className="mb-8 text-sm text-gray-500">
         {isEditing

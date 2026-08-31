@@ -6,9 +6,17 @@ import { formatDateTime } from '../../lib/format'
 const ACTION_LABELS: Record<string, string> = {
   approve_item: 'Approved Item',
   reject_item: 'Rejected Item',
+  mark_item_under_review: 'Marked Item Under Review',
+  request_item_changes: 'Requested Item Changes',
   verify_seller: 'Verified Seller',
   unverify_seller: 'Unverified Seller',
   update_settings: 'Updated Settings',
+  update_legal_page: 'Updated Legal Page',
+  approve_seller_application: 'Approved Seller Application',
+  reject_seller_application: 'Rejected Seller Application',
+  update_payout_status: 'Updated Payout Status',
+  refund_order: 'Refunded Order',
+  refund_order_payout_already_paid: 'Refunded Order (Payout Already Paid)',
 }
 
 function actionLabel(action: string) {

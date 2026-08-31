@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Link } from 'react-router-dom'
 import { getAdminOrders, getAdminStats, type AdminOrder, type AdminStats } from '../../lib/api'
 import { useAuth } from '../../lib/auth'
 import { formatCurrency } from '../../lib/format'
@@ -10,6 +11,29 @@ function StatCard({ label, value }: { label: string; value: string | number }) {
       <div className="font-mono text-2xl font-semibold text-royal">{value}</div>
       <div className="mt-1.5 text-[11.5px] text-gray-500">{label}</div>
     </div>
+  )
+}
+
+function AttentionCard({ label, value, to }: { label: string; value: string | number; to: string }) {
+  return (
+    <Link
+      to={to}
+      className="flex items-center gap-3.5 rounded-xl border border-gold/50 bg-gold/10 p-5 transition hover:bg-gold/15"
+    >
+      <span className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-gold/25 text-[#8a6e18]">
+        <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+          <path
+            fillRule="evenodd"
+            d="M8.485 2.495c.673-1.165 2.357-1.165 3.03 0l6.28 10.875c.673 1.166-.168 2.63-1.514 2.63H3.72c-1.347 0-2.187-1.464-1.515-2.63L8.485 2.495ZM10 6a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 10 6Zm0 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
+            clipRule="evenodd"
+          />
+        </svg>
+      </span>
+      <div>
+        <div className="font-mono text-2xl font-semibold text-[#8a6e18]">{value}</div>
+        <div className="mt-1 text-[11.5px] font-semibold text-[#8a6e18]">{label}</div>
+      </div>
+    </Link>
   )
 }
 
@@ -54,7 +78,13 @@ export default function Dashboard() {
         <p className="text-sm text-gray-500">Loading…</p>
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="mb-2 text-[11px] font-semibold tracking-wider text-gray-500 uppercase">Needs Attention</div>
+          <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <AttentionCard label="Pending Seller Approvals" value={stats.pendingSellerApprovals} to="/admin/approvals" />
+            <AttentionCard label="Pending Payments" value={stats.pendingPayments} to="/admin/orders" />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             <StatCard label="Total Users" value={stats.totalUsers} />
             <StatCard label="Total Sellers" value={stats.totalSellers} />
             <StatCard label="Verified Sellers" value={stats.verifiedSellers} />
@@ -63,8 +93,6 @@ export default function Dashboard() {
             <StatCard label="Completed Auctions" value={stats.completedAuctions} />
             <StatCard label="Total Sales Value" value={formatCurrency(stats.totalSalesValue)} />
             <StatCard label="Platform Revenue" value={formatCurrency(stats.platformRevenue)} />
-            <StatCard label="Pending Seller Approvals" value={stats.pendingSellerApprovals} />
-            <StatCard label="Pending Payments" value={stats.pendingPayments} />
           </div>
 
           <div className="mt-8 rounded-xl border border-royal/10 bg-white p-6">

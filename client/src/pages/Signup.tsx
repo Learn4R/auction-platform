@@ -28,7 +28,7 @@ export default function Signup() {
   }
 
   return (
-    <div className="mx-auto max-w-md px-6 py-20">
+    <div className="mx-auto w-full max-w-md px-6 py-20 md:flex md:flex-1 md:flex-col md:justify-center md:py-10">
       <h1 className="mb-2 font-display text-3xl text-royal">Sign Up</h1>
       <p className="mb-8 text-sm text-gray-500">Create an account to bid, or sell items of your own.</p>
 
