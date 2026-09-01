@@ -5,6 +5,7 @@ import type { ItemSummary } from '../lib/api'
 import { formatCountdown, formatCurrency, getPriceDisplay } from '../lib/format'
 import { CategoryThumb } from './CategoryThumb'
 import { StatusPill } from './StatusPill'
+import { WatchlistButton } from './WatchlistButton'
 
 export function ItemCard({ item }: { item: ItemSummary }) {
   const { auction } = item
@@ -16,7 +17,10 @@ export function ItemCard({ item }: { item: ItemSummary }) {
       onPress={() => router.push(auction?.status === 'live' ? `/live/${item.id}` : `/items/${item.id}`)}
       testID={`item-card-${item.id}`}
     >
-      <CategoryThumb categoryName={item.category.name} size={64} />
+      <View style={styles.thumbWrap}>
+        <CategoryThumb categoryName={item.category.name} size={64} />
+        <WatchlistButton itemId={item.id} style={styles.watchlistButton} />
+      </View>
       <View style={styles.body}>
         <View style={styles.topRow}>
           <Text style={styles.category}>{item.category.name.toUpperCase()}</Text>
@@ -55,6 +59,14 @@ const styles = StyleSheet.create({
   },
   cardPressed: {
     opacity: 0.85,
+  },
+  thumbWrap: {
+    position: 'relative',
+  },
+  watchlistButton: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
   },
   body: {
     flex: 1,

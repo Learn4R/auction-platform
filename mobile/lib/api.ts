@@ -126,3 +126,49 @@ export function setMaxBid(auctionId: string, amount: number, token: string) {
     { method: 'POST', token, body: { amount } },
   )
 }
+
+export function getWatchlist(token: string) {
+  return request<ItemSummary[]>('/api/watchlist', { token })
+}
+
+export function toggleWatchlist(itemId: string, token: string) {
+  return request<{ watchlisted: boolean }>(`/api/watchlist/${itemId}`, { method: 'POST', token })
+}
+
+export type NotificationType =
+  | 'outbid'
+  | 'auction_won'
+  | 'listing_approved'
+  | 'listing_rejected'
+  | 'auction_extended'
+  | 'auction_started'
+
+export interface AppNotification {
+  id: string
+  type: NotificationType
+  message: string
+  read: boolean
+  itemId: string | null
+  auctionId: string | null
+  createdAt: string
+}
+
+export function getNotifications(token: string) {
+  return request<AppNotification[]>('/api/notifications', { token })
+}
+
+export function markNotificationRead(id: string, token: string) {
+  return request<AppNotification>(`/api/notifications/${id}/read`, { method: 'PATCH', token })
+}
+
+export interface PaginatedNotifications {
+  notifications: AppNotification[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
+}
+
+export function getAllNotifications(page: number, token: string) {
+  return request<PaginatedNotifications>(`/api/notifications/all?page=${page}`, { token })
+}

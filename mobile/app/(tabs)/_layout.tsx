@@ -5,6 +5,7 @@ import type { ComponentProps } from 'react'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { colors } from '../../constants/colors'
 import { useAuth } from '../../lib/auth'
+import { useNotifications } from '../../lib/notifications'
 
 // react-navigation's BottomTabNavigationOptions has no tabBarTestID — the
 // standard way to attach a stable testID to a tab button is to render it via
@@ -22,6 +23,7 @@ function tabButton(testID: string) {
 // Phase 1 index.tsx gate did for the placeholder Home screen.
 export default function TabsLayout() {
   const { user, loading } = useAuth()
+  const { unreadCount } = useNotifications()
 
   if (loading) {
     return (
@@ -73,6 +75,8 @@ export default function TabsLayout() {
           title: 'Notifications',
           tabBarButton: tabButton('tab-notifications'),
           tabBarIcon: ({ color, size }) => <Ionicons name="notifications" size={size} color={color} />,
+          tabBarBadge: unreadCount > 0 ? (unreadCount > 9 ? '9+' : unreadCount) : undefined,
+          tabBarBadgeStyle: styles.badge,
         }}
       />
       <Tabs.Screen
@@ -93,5 +97,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.ivory,
+  },
+  badge: {
+    backgroundColor: colors.gold,
+    color: colors.royal,
+    fontWeight: '700',
   },
 })
