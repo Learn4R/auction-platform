@@ -38,6 +38,20 @@ export function formatCountdown(target: string) {
   return `${minutes}m`
 }
 
+/** Down-to-the-second countdown, for the live bid panel where anti-snipe timing matters. */
+export function formatCountdownPrecise(target: string) {
+  const diff = new Date(target).getTime() - Date.now()
+  if (diff <= 0) return 'Ended'
+
+  const totalSeconds = Math.floor(diff / 1000)
+  const hours = Math.floor(totalSeconds / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+  const seconds = totalSeconds % 60
+
+  if (hours > 0) return `${hours}h ${String(minutes).padStart(2, '0')}m`
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+}
+
 // The one place that decides what price label + amount an item's card and
 // detail screen show, driven by the auction's actual status rather than by
 // "does currentBid happen to be set" — a live auction with zero bids so far

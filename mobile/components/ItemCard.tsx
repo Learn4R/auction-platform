@@ -13,7 +13,7 @@ export function ItemCard({ item }: { item: ItemSummary }) {
   return (
     <Pressable
       style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
-      onPress={() => router.push(`/items/${item.id}`)}
+      onPress={() => router.push(auction?.status === 'live' ? `/live/${item.id}` : `/items/${item.id}`)}
       testID={`item-card-${item.id}`}
     >
       <CategoryThumb categoryName={item.category.name} size={64} />

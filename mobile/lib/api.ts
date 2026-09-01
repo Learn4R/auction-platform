@@ -112,3 +112,17 @@ export function getItems() {
 export function getItem(id: string) {
   return request<ItemDetail>(`/api/items/${id}`)
 }
+
+export function placeBid(auctionId: string, amount: number, token: string) {
+  return request<{ currentBid: number; endTime: string; leaderId: string | null }>(
+    `/api/auctions/${auctionId}/bids`,
+    { method: 'POST', token, body: { amount } },
+  )
+}
+
+export function setMaxBid(auctionId: string, amount: number, token: string) {
+  return request<{ amount: number; currentBid: number | null; leaderId: string | null }>(
+    `/api/auctions/${auctionId}/max-bid`,
+    { method: 'POST', token, body: { amount } },
+  )
+}

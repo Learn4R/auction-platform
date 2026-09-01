@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Stack, useLocalSearchParams } from 'expo-router'
+import { router, Stack, useLocalSearchParams } from 'expo-router'
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { CategoryThumb } from '../../components/CategoryThumb'
 import { ItemSpecs } from '../../components/ItemSpecs'
@@ -8,10 +8,14 @@ import { colors } from '../../constants/colors'
 import { getItem, type ItemDetail } from '../../lib/api'
 import { formatCurrency, getPriceDisplay } from '../../lib/format'
 
-// Read-only for now: shows the item's real data pulled from
-// GET /api/items/:id. No bid button or live functionality yet — that's its
-// own dedicated future phase, same as how live bidding was its own phase on
-// the web app.
+// Read-only: shows the item's real data pulled from GET /api/items/:id. No
+// bid button here — that's the dedicated Live Auction screen's job, same as
+// how the web app splits ItemDetail from LiveAuction. Tapping a card already
+// routes LIVE items straight to /live/[id] (see components/ItemCard.tsx),
+// but this screen still redirects there itself too, in case an item goes
+// live between when a card was rendered and when this screen loads, or this
+// route is reached directly (e.g. a deep link) — mirroring web ItemDetail's
+// own `if (auction?.status === 'live') return <LiveAuction .../>` guard.
 export default function ItemDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const [item, setItem] = useState<ItemDetail | null>(null)
@@ -20,7 +24,13 @@ export default function ItemDetailScreen() {
   useEffect(() => {
     if (!id) return
     getItem(id)
-      .then(setItem)
+      .then((result) => {
+        if (result.auction?.status === 'live') {
+          router.replace(`/live/${id}`)
+          return
+        }
+        setItem(result)
+      })
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load this item'))
   }, [id])
 
