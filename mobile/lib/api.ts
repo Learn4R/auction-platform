@@ -46,3 +46,69 @@ export function register(data: { name: string; email: string; password: string; 
     { method: 'POST', body: data },
   )
 }
+
+// Mirrors server/src/routes/items.ts' itemSummarySelect / AuctionStatus, and
+// client/src/lib/api.ts's equivalent types — same backend, same shape.
+export type AuctionStatus = 'upcoming' | 'live' | 'ended'
+
+export interface AuctionSummary {
+  id: string
+  startingBid: string
+  currentBid: string | null
+  bidIncrement: string
+  startTime: string
+  endTime: string
+  status: AuctionStatus
+  winner: { id: string; name: string } | null
+  _count: { bids: number }
+}
+
+export interface Bid {
+  id: string
+  amount: string
+  createdAt: string
+  isProxy: boolean
+  user: { id: string; name: string }
+}
+
+export interface AuctionDetail extends AuctionSummary {
+  bids: Bid[]
+}
+
+export interface ItemSummary {
+  id: string
+  title: string
+  description: string
+  year: number | null
+  material: string | null
+  condition: string | null
+  denomination: string | null
+  mint: string | null
+  rulerAuthority: string | null
+  period: string | null
+  weight: string | null
+  diameter: string | null
+  grade: string | null
+  certificateNumber: string | null
+  gradingCompany: string | null
+  provenance: string | null
+  images: string[]
+  category: { id: string; name: string; slug: string }
+  seller: { id: string; name: string; verified: boolean }
+  auction: AuctionSummary | null
+}
+
+export interface ItemDetail extends Omit<ItemSummary, 'auction'> {
+  auction: AuctionDetail | null
+}
+
+// GET /api/items only ever returns approved items and needs no auth — same
+// public endpoint the web app's Home/Browse pages call. No filters yet;
+// the Auctions tab is a plain full list for this phase.
+export function getItems() {
+  return request<ItemSummary[]>('/api/items')
+}
+
+export function getItem(id: string) {
+  return request<ItemDetail>(`/api/items/${id}`)
+}
