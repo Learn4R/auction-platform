@@ -62,6 +62,24 @@ app.use('/api/dashboard', dashboardRouter)
 app.use('/api/notifications', notificationsRouter)
 app.use('/api/legal', legalRouter)
 
+// Not every thrown value is an Error instance — notably, the Razorpay SDK
+// rejects with a plain object literal (`throw { statusCode, error }`), and
+// `String(plainObject)` collapses that to the useless "[object Object]".
+// JSON.stringify captures the real, enumerable content of a plain object
+// (or a string/number/etc. thrown directly) in a readable form; the
+// try/catch guards the one way that can itself fail (a circular reference),
+// falling back to String() rather than letting the logger itself throw.
+function describeThrown(err: unknown): string {
+  if (err instanceof Error) return err.message
+  try {
+    const json = JSON.stringify(err)
+    if (json !== undefined) return json
+  } catch {
+    // circular reference, BigInt, etc. — fall through to String()
+  }
+  return String(err)
+}
+
 // Catch-all error handler — must be registered last, and must take all four
 // parameters (that arity is what tells Express to treat it as an error
 // handler rather than another route middleware). Express 5 automatically
@@ -70,7 +88,7 @@ app.use('/api/legal', legalRouter)
 // Logs with enough context to actually debug from, and never echoes the
 // raw error/stack back to the client.
 app.use((err: unknown, req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  const message = err instanceof Error ? err.message : String(err)
+  const message = describeThrown(err)
   console.error(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl} -> ${message}`)
   if (err instanceof Error && err.stack) console.error(err.stack)
 

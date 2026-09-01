@@ -8,9 +8,15 @@ import type { ReactElement } from 'react'
 // the logo/empty-state call sites that pass no item at all — falls back to
 // the plain generic roundel this component always used to render.
 
-const ROYAL = '#173B70'
-const GOLD = '#C9A227'
-const CHAMPAGNE = '#DDBE63'
+// Reference the same CSS custom properties the rest of the app's Tailwind
+// theme is built from (client/src/index.css's @theme block) rather than
+// re-declaring the hex values here — raw SVG stroke/fill attributes can't
+// take a Tailwind class, but they can take a CSS var() just like any other
+// CSS color value, so this keeps the brand palette defined in exactly one
+// place instead of two that could silently drift apart.
+const ROYAL = 'var(--color-royal)'
+const GOLD = 'var(--color-gold)'
+const CHAMPAGNE = 'var(--color-champagne)'
 
 export interface EmblemItem {
   rulerAuthority?: string | null
