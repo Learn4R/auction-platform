@@ -2,14 +2,13 @@ import { router } from 'expo-router'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { colors } from '../constants/colors'
 import type { ItemSummary } from '../lib/api'
-import { formatCountdown, formatCurrency } from '../lib/format'
+import { formatCountdown, formatCurrency, getPriceDisplay } from '../lib/format'
 import { CategoryThumb } from './CategoryThumb'
 import { StatusPill } from './StatusPill'
 
 export function ItemCard({ item }: { item: ItemSummary }) {
   const { auction } = item
-  const price = auction?.currentBid ?? auction?.startingBid
-  const priceLabel = auction?.currentBid ? 'Current Bid' : 'Starting Bid'
+  const { label: priceLabel, amount: price } = getPriceDisplay(auction)
 
   return (
     <Pressable

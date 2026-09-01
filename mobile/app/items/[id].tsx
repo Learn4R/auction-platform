@@ -6,7 +6,7 @@ import { ItemSpecs } from '../../components/ItemSpecs'
 import { StatusPill } from '../../components/StatusPill'
 import { colors } from '../../constants/colors'
 import { getItem, type ItemDetail } from '../../lib/api'
-import { formatCurrency } from '../../lib/format'
+import { formatCurrency, getPriceDisplay } from '../../lib/format'
 
 // Read-only for now: shows the item's real data pulled from
 // GET /api/items/:id. No bid button or live functionality yet — that's its
@@ -41,8 +41,7 @@ export default function ItemDetailScreen() {
   }
 
   const { auction } = item
-  const price = auction?.currentBid ?? auction?.startingBid
-  const priceLabel = auction?.currentBid ? 'Current Bid' : 'Starting Bid'
+  const { label: priceLabel, amount: price } = getPriceDisplay(auction)
 
   return (
     <>
