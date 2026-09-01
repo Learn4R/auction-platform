@@ -156,3 +156,42 @@ All referenced screenshots live in `ux-audit-screenshots/` at the repo root (49 
 14. Enlarge Sell wizard photo thumbnails (or add click-to-zoom) for a numismatic audience that needs to check fine detail.
 15. My Listings: clarify "Earnings" vs. "Pending Payout" with a tooltip or subtext so the two numbers don't read as contradictory.
 16. Item Detail / Live Auction: resolve or accept the duplicated "Condition" line between the spec table and the Authenticity box.
+
+---
+
+## 2026-09-01 Follow-up Check
+
+**Scope:** every P0–P3 item above has since been fixed (across several follow-up phases), and a good deal has shipped on top: a full header/sub-header reorganization (not just a bugfix — primary and secondary nav merged into one responsive row, breakpoint moved from `lg:` to `md:`, Browse/Categories dropdowns, account-menu reordering), a parametric emblem illustration system replacing the single generic placeholder, and the catalog going from a handful of seed items to a real 22-item numismatic collection. This section re-examines the app fresh — real screenshots taken today, not screenshots reused from when each fix shipped — specifically to check whether any of it has drifted or interacts badly with what came after.
+
+All screenshots for this pass live in `/tmp/mudra-scratch/shots/` (session-local, not committed) rather than a new `ux-audit-screenshots/` batch, since this is a spot-check against known-good baselines rather than a from-scratch survey — findings below are still each anchored to an actual captured screenshot, described inline.
+
+### Header / sub-header — holding up correctly
+
+Captured at desktop (1400px), the two tightest tablet widths (768px and 850px), and mobile (390px), for logged-out/buyer/seller/admin (16 screenshots total — the full breakpoint × role matrix, not a sample).
+
+- **No breaking or overlap at any width for any role**, including the worst case: an admin account, which renders all six nav items (Home, Live Auctions, Browse▾, Categories▾, How It Works, Apply to Sell) plus the full search/notification/avatar icon cluster, at exactly 768px — the tightest possible combination. This was the exact scenario that broke during the reorganization's own build-and-verify pass (caught and fixed then); it's still fixed now that other pages have had a chance to add nav-adjacent elements (notification bell, etc.) that could in principle have pushed it back over budget. They didn't.
+- Browse dropdown (All Auctions / Upcoming Auctions / Archive) and Categories dropdown open and close cleanly at desktop width, correctly positioned, no regression.
+- Account dropdown ordering (identity → role-specific primary link → My Dashboard → Seller Dashboard-if-applicable → Log Out) still correct — verified by re-reading the current code path (`sellerStatus`-gated `showSellerDashboard`) rather than re-screenshotting every role's dropdown a second time, since the underlying logic hasn't changed since it was last visually confirmed.
+
+### Parametric emblem system — confirmed against the real 22-item catalog, not just the handful of examples used to build it
+
+Screenshots of the actual live Browse grid, filtered per category, so every card shown is real catalog content rather than cherry-picked test items:
+
+- **British India Coins (13 real items)**: all six rulers present in the real catalog — William IV, Victoria, Edward VII, George V (×2), George VI (×2) — each render a visibly distinct crown/monogram device, correctly legible even at real card-thumbnail size in a dense grid, not just in the isolated close-ups used when the system was first built. The 1911 "Pig Rupee" card correctly shows its PCGS certification seal in the live grid.
+- **Republic of India Coins (4 items)**: all four consistently show the Ashoka Lion Capital device, as designed.
+- **Rare Currency Notes (10 items)**: all render the rectangular note frame (correctly distinct from the circular coin medallion) with denomination-tiered corner ornamentation; the KGVI Haj Note correctly shows its PMG certification seal.
+- **Two older pre-catalog seed items** (from before the parametric system existed, no `rulerAuthority`/`denomination` set) correctly fall back to the plain generic roundel in the middle of the same grid as the new parametric cards — exactly the graceful-degradation behavior the system was designed for, now confirmed at real scale next to genuinely differentiated neighbors rather than in isolation.
+- **One real finding, not an emblem-system bug**: one note card rendered as a fully blank white box in the live Browse grid. Investigated directly — the item had a real (HTTP 200, valid PNG) but visually blank uploaded photo, from a leftover test listing under a throwaway seller account never cleaned up from earlier testing. Not a code defect; the item and its seller account have been removed (see the matching entry in `PROJECT_AUDIT.md`'s follow-up section) and the catalog now renders cleanly. Flagged here because it's exactly the kind of thing a real "does the catalog actually look right" check is supposed to catch, and a code-only review would have missed it entirely.
+
+### Other pages touched since the last full audit — spot-checked
+
+- **Login / Signup**: still correctly vertically centered on desktop — the original "large unused vertical space" finding stays fixed.
+- **Legal pages**: still constrained to a readable column width (`max-w-prose`) — the original "no max-width" finding stays fixed.
+- **Admin Dashboard**: the "Needs Attention" row (Pending Seller Approvals / Pending Payments) is still visually distinct from the general KPI grid — confirmed on a fresh screenshot against real current data.
+- **Admin Audit Log**: every action in the current live log renders a clean human label (`APPROVED ITEM`, `VERIFIED SELLER`, `APPROVED SELLER APPLICATION`) — no raw snake_case, confirmed against real (not synthetic) admin-action rows generated during this session's own testing.
+- **Admin Sellers**: still the card-per-row pattern (not the old table), still shows correctly on a real, currently-longer seller list than when it was first fixed.
+- **Item Detail / Live Auction "Listed by," Sell wizard review-step currency/date formatting, My Listings' Earnings/Pending Payout hint text, and the removed duplicate "Condition" row**: all reconfirmed present in the current code (not re-screenshotted individually this pass, since nothing in the intervening work touches these files) — no regressions found.
+
+### Net finding for this pass
+
+No UI regressions in anything previously fixed. The header reorganization and the emblem system — the two largest, newest, most structurally significant changes since the last full audit — both hold up under a fresh, independent look at real breakpoints, real roles, and the real populated catalog, not just the conditions they were built and verified under. The one genuine issue surfaced (the blank-photo listing) was a data hygiene problem, not a design or code defect, and has been cleaned up.
