@@ -1,8 +1,10 @@
 import { useState } from 'react'
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
+import { Pressable, StyleSheet, View } from 'react-native'
 import { colors } from '../constants/colors'
 import { saveShippingAddress, type MyProfile, type Order } from '../lib/api'
 import { useAuth } from '../lib/auth'
+import { Text } from './Text'
+import { TextInput } from './TextInput'
 
 // Mirrors client/src/components/ShippingAddressForm.tsx — same fields,
 // same endpoint, prefilled from the buyer's saved default address if they
@@ -48,7 +50,9 @@ export function ShippingAddressForm({
 
   return (
     <View style={styles.container} testID={`shipping-form-${order.id}`}>
-      <Text style={styles.label}>Shipping Address Required</Text>
+      <Text variant="mono" style={styles.label}>
+        Shipping Address Required
+      </Text>
       <Text style={styles.hint}>Add where this lot should ship before you can pay.</Text>
 
       <TextInput style={styles.input} placeholder="Full name" value={name} onChangeText={setName} testID="ship-name" />

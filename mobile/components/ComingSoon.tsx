@@ -1,10 +1,13 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import { colors } from '../constants/colors'
+import { Text } from './Text'
 
 export function ComingSoon({ title, testID }: { title: string; testID: string }) {
   return (
     <View style={styles.center} testID={testID}>
-      <Text style={styles.title}>{title}</Text>
+      <Text variant="display" style={styles.title}>
+        {title}
+      </Text>
       <Text style={styles.subtitle}>Coming soon — we&apos;re building this out in an upcoming phase.</Text>
     </View>
   )

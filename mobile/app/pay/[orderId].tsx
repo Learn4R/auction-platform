@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native'
 import { CheckoutWebView, type CheckoutResult } from '../../components/CheckoutWebView'
+import { Text } from '../../components/Text'
 import { colors } from '../../constants/colors'
 import { createPayment, verifyPayment } from '../../lib/api'
 import { useAuth } from '../../lib/auth'
@@ -83,7 +84,9 @@ export default function PayScreen() {
         {outcome === 'success' ? (
           <View style={styles.center} testID="payment-success">
             <Text style={styles.successIcon}>✓</Text>
-            <Text style={styles.successTitle}>Payment Successful</Text>
+            <Text variant="display" style={styles.successTitle}>
+              Payment Successful
+            </Text>
             <Text style={styles.successBody}>Your order has been marked as paid.</Text>
             <Pressable style={styles.doneButton} onPress={() => router.replace('/my-orders')} testID="payment-done">
               <Text style={styles.doneButtonText}>Back to My Orders</Text>
@@ -92,7 +95,9 @@ export default function PayScreen() {
         ) : outcome === 'failed' ? (
           <View style={styles.center} testID="payment-failed">
             <Text style={styles.failIcon}>✕</Text>
-            <Text style={styles.failTitle}>Payment Failed</Text>
+            <Text variant="display" style={styles.failTitle}>
+              Payment Failed
+            </Text>
             {error && <Text style={styles.failBody}>{error}</Text>}
             <Pressable style={styles.doneButton} onPress={() => router.back()} testID="payment-back">
               <Text style={styles.doneButtonText}>Back to My Orders</Text>
@@ -133,7 +138,7 @@ const styles = StyleSheet.create({
   },
   successIcon: {
     fontSize: 40,
-    color: '#1a9550',
+    color: colors.green,
     marginBottom: 8,
   },
   successTitle: {

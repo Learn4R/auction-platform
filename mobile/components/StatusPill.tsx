@@ -1,6 +1,7 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import { colors } from '../constants/colors'
 import type { AuctionStatus } from '../lib/api'
+import { Text } from './Text'
 
 const LABELS: Record<AuctionStatus, string> = { live: 'Live', upcoming: 'Upcoming', ended: 'Ended' }
 const BG: Record<AuctionStatus, string> = {
@@ -13,7 +14,9 @@ const FG: Record<AuctionStatus, string> = { live: colors.red, upcoming: colors.d
 export function StatusPill({ status }: { status: AuctionStatus }) {
   return (
     <View style={[styles.pill, { backgroundColor: BG[status] }]} testID={`status-pill-${status}`}>
-      <Text style={[styles.text, { color: FG[status] }]}>{LABELS[status]}</Text>
+      <Text variant="mono" style={[styles.text, { color: FG[status] }]}>
+        {LABELS[status]}
+      </Text>
     </View>
   )
 }

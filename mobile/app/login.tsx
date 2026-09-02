@@ -1,16 +1,10 @@
 import { useState } from 'react'
 import { Link, router } from 'expo-router'
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native'
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native'
+import { Text } from '../components/Text'
+import { TextInput } from '../components/TextInput'
 import { colors } from '../constants/colors'
+import { fonts } from '../constants/fonts'
 import { useAuth } from '../lib/auth'
 
 export default function Login() {
@@ -43,7 +37,9 @@ export default function Login() {
       style={styles.container}
     >
       <View style={styles.form}>
-        <Text style={styles.title}>Log In</Text>
+        <Text variant="display" style={styles.title}>
+          Log In
+        </Text>
         <Text style={styles.subtitle}>Sign in to bid, sell items, or manage the marketplace.</Text>
 
         <Text style={styles.label}>Email</Text>
@@ -167,5 +163,6 @@ const styles = StyleSheet.create({
     color: colors.royal,
     fontWeight: '600',
     fontSize: 13.5,
+    fontFamily: fonts.bodySemiBold,
   },
 })

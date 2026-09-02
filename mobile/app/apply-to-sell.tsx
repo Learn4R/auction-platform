@@ -1,16 +1,8 @@
 import { useEffect, useState } from 'react'
 import { router, Stack } from 'expo-router'
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native'
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native'
+import { Text } from '../components/Text'
+import { TextInput } from '../components/TextInput'
 import { colors } from '../constants/colors'
 import { applyToSell, getMySellerApplication, type MySellerApplication, type SellerApplicationInput } from '../lib/api'
 import { useAuth } from '../lib/auth'
@@ -82,7 +74,9 @@ export default function ApplyToSell() {
   if (status.sellerStatus === 'pending') {
     return (
       <View style={styles.center} testID="apply-pending">
-        <Text style={styles.pendingTitle}>Application Under Review</Text>
+        <Text variant="display" style={styles.pendingTitle}>
+          Application Under Review
+        </Text>
         <Text style={styles.pendingBody}>
           Your seller application is under review. We&apos;ll notify you as soon as a decision is made — usually
           within a couple of business days.
@@ -94,7 +88,9 @@ export default function ApplyToSell() {
   if (status.sellerStatus === 'approved') {
     return (
       <View style={styles.center} testID="apply-already-approved">
-        <Text style={styles.pendingTitle}>You&apos;re already an approved seller</Text>
+        <Text variant="display" style={styles.pendingTitle}>
+          You&apos;re already an approved seller
+        </Text>
       </View>
     )
   }
@@ -106,7 +102,9 @@ export default function ApplyToSell() {
       <Stack.Screen options={{ headerShown: true, title: showReapply ? 'Reapply to Sell' : 'Apply to Sell' }} />
       <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.content} testID="apply-form">
-          <Text style={styles.title}>{showReapply ? 'Reapply to Sell' : 'Apply to Sell'}</Text>
+          <Text variant="display" style={styles.title}>
+            {showReapply ? 'Reapply to Sell' : 'Apply to Sell'}
+          </Text>
           <Text style={styles.subtitle}>
             Selling on Mudra House requires a short verification step. Tell us a bit about yourself and where to
             send payouts, and our team will review your application.
@@ -157,7 +155,9 @@ export default function ApplyToSell() {
             />
           </Field>
 
-          <Text style={styles.sectionTitle}>Payout Details</Text>
+          <Text variant="mono" style={styles.sectionTitle}>
+            Payout Details
+          </Text>
           <Field label="PAN Number">
             <TextInput
               style={styles.input}

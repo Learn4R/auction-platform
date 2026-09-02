@@ -1,6 +1,7 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import { colors } from '../constants/colors'
 import type { ShippingStatus } from '../lib/api'
+import { Text } from './Text'
 
 // Mirrors client/src/components/OrderStatus.tsx's ShippingProgress — the
 // same four-step row, as dots connected by lines instead of flex-1 divs.
@@ -22,7 +23,9 @@ export function ShippingProgress({ status }: { status: ShippingStatus }) {
             <View style={[styles.dot, i <= activeIndex && styles.dotActive]} />
             {i < STEPS.length - 1 && <View style={[styles.line, i < activeIndex && styles.lineActive]} />}
           </View>
-          <Text style={[styles.label, i <= activeIndex && styles.labelActive]}>{step.label}</Text>
+          <Text variant="mono" style={[styles.label, i <= activeIndex && styles.labelActive]}>
+            {step.label}
+          </Text>
         </View>
       ))}
     </View>

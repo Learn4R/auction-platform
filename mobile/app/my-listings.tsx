@@ -1,11 +1,19 @@
 import { useCallback, useState } from 'react'
-import { Stack, useFocusEffect } from 'expo-router'
-import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native'
+import { router, Stack, useFocusEffect } from 'expo-router'
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from 'react-native'
 import { ItemStatusPill } from '../components/ItemStatusPill'
+import { Text } from '../components/Text'
 import { colors } from '../constants/colors'
 import { getMyItems, type ItemSubmission } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { formatCurrency, formatDateTime } from '../lib/format'
+
+// The server 403s GET /api/seller/items with this exact message for any
+// non-seller (see server/src/middleware/auth.ts) — reached here if this
+// screen is opened directly (e.g. a stale deep link) rather than through
+// Profile's own approved-seller-only "My Listings" link. Shown as a proper
+// on-brand prompt instead of the raw server string.
+const NOT_A_SELLER_ERROR = 'Insufficient permissions'
 
 // A simple list of the seller's own submitted items with their real
 // status — proves submission + status tracking work end to end. No
@@ -27,7 +35,20 @@ export default function MyListings() {
   return (
     <>
       <Stack.Screen options={{ headerShown: true, title: 'My Listings' }} />
-      {error ? (
+      {error === NOT_A_SELLER_ERROR ? (
+        <View style={styles.center} testID="my-listings-not-seller">
+          <Text variant="display" style={styles.emptyTitle}>
+            Selling starts with an application
+          </Text>
+          <Text style={styles.emptySubtitle}>
+            My Listings is where approved sellers track their submitted lots. Apply to sell to start listing items
+            for auction.
+          </Text>
+          <Pressable style={styles.applyButton} onPress={() => router.replace('/apply-to-sell')} testID="my-listings-apply-to-sell">
+            <Text style={styles.applyButtonText}>Apply to Sell</Text>
+          </Pressable>
+        </View>
+      ) : error ? (
         <View style={styles.center}>
           <Text style={styles.errorText} testID="my-listings-error">
             {error}
@@ -48,7 +69,9 @@ export default function MyListings() {
           renderItem={({ item }) => <ListingRow item={item} />}
           ListEmptyComponent={
             <View style={styles.empty} testID="my-listings-empty">
-              <Text style={styles.emptyTitle}>No listings yet</Text>
+              <Text variant="display" style={styles.emptyTitle}>
+                No listings yet
+              </Text>
               <Text style={styles.emptySubtitle}>Submit your first item to get started.</Text>
             </View>
           }
@@ -63,18 +86,28 @@ function ListingRow({ item }: { item: ItemSubmission }) {
     <View style={styles.row} testID={`my-listing-${item.id}`}>
       <View style={styles.rowTop}>
         <View style={styles.rowTitleBlock}>
-          <Text style={styles.category}>{item.category?.name ?? 'No category'}</Text>
-          <Text style={styles.title}>{item.title || 'Untitled item'}</Text>
+          <Text variant="mono" style={styles.category}>
+            {item.category?.name ?? 'No category'}
+          </Text>
+          <Text variant="display" style={styles.title}>
+            {item.title || 'Untitled item'}
+          </Text>
         </View>
         <ItemStatusPill status={item.status} />
       </View>
 
       <View style={styles.detailRow}>
-        <Text style={styles.detail}>
-          Starting bid: <Text style={styles.detailValue}>{item.proposedStartingBid ? formatCurrency(item.proposedStartingBid) : '—'}</Text>
+        <Text variant="mono" style={styles.detail}>
+          Starting bid:{' '}
+          <Text variant="mono" style={styles.detailValue}>
+            {item.proposedStartingBid ? formatCurrency(item.proposedStartingBid) : '—'}
+          </Text>
         </Text>
-        <Text style={styles.detail}>
-          Ends: <Text style={styles.detailValue}>{item.proposedEndTime ? formatDateTime(item.proposedEndTime) : '—'}</Text>
+        <Text variant="mono" style={styles.detail}>
+          Ends:{' '}
+          <Text variant="mono" style={styles.detailValue}>
+            {item.proposedEndTime ? formatDateTime(item.proposedEndTime) : '—'}
+          </Text>
         </Text>
       </View>
 
@@ -185,7 +218,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.ivory,
-    padding: 20,
+    padding: 24,
+    gap: 8,
   },
   errorText: {
     fontSize: 13,
@@ -208,5 +242,18 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.gray,
     textAlign: 'center',
+  },
+  applyButton: {
+    backgroundColor: colors.royal,
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 22,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  applyButtonText: {
+    color: colors.white,
+    fontSize: 14,
+    fontWeight: '600',
   },
 })

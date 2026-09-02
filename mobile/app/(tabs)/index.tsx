@@ -1,11 +1,16 @@
 import { useEffect, useState } from 'react'
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native'
 import { ItemCard } from '../../components/ItemCard'
+import { Text } from '../../components/Text'
 import { colors } from '../../constants/colors'
 import { getItems, type ItemSummary } from '../../lib/api'
 
 function SectionHead({ title }: { title: string }) {
-  return <Text style={styles.sectionTitle}>{title}</Text>
+  return (
+    <Text variant="display" style={styles.sectionTitle}>
+      {title}
+    </Text>
+  )
 }
 
 function Rail({ items, emptyText, testID }: { items: ItemSummary[]; emptyText: string; testID: string }) {
@@ -41,7 +46,9 @@ export default function Home() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content} testID="home-scroll">
-      <Text style={styles.pageTitle}>Discover History. Own Rarity.</Text>
+      <Text variant="display" style={styles.pageTitle}>
+        Discover History. Own Rarity.
+      </Text>
       <Text style={styles.pageSubtitle}>
         Bid on rare Indian currencies, historic coins, antiques and exceptional collectibles.
       </Text>

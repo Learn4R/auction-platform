@@ -1,15 +1,17 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import { colors } from '../constants/colors'
 import type { ItemStatus } from '../lib/api'
+import { Text } from './Text'
 
 // Mirrors client/src/components/ItemStatusBadge.tsx — same status set,
-// same colors, same labels, just as a native pill instead of a <span>.
+// same colors, same labels, same font-mono treatment, just as a native
+// pill instead of a <span>.
 const BG: Record<ItemStatus, string> = {
   draft: '#F3F4F6',
   submitted: 'rgba(201,162,39,0.1)',
   under_review: 'rgba(35,79,140,0.1)',
   changes_requested: 'rgba(200,59,59,0.1)',
-  approved: 'rgba(34,164,90,0.1)',
+  approved: 'rgba(22,133,91,0.1)',
   rejected: 'rgba(200,59,59,0.1)',
 }
 const FG: Record<ItemStatus, string> = {
@@ -17,7 +19,7 @@ const FG: Record<ItemStatus, string> = {
   submitted: '#8a6e18',
   under_review: colors.deepblue,
   changes_requested: colors.red,
-  approved: '#1a9550',
+  approved: colors.green,
   rejected: colors.red,
 }
 const LABELS: Record<ItemStatus, string> = {
@@ -32,7 +34,9 @@ const LABELS: Record<ItemStatus, string> = {
 export function ItemStatusPill({ status }: { status: ItemStatus }) {
   return (
     <View style={[styles.pill, { backgroundColor: BG[status] }]} testID={`item-status-pill-${status}`}>
-      <Text style={[styles.text, { color: FG[status] }]}>{LABELS[status]}</Text>
+      <Text variant="mono" style={[styles.text, { color: FG[status] }]}>
+        {LABELS[status]}
+      </Text>
     </View>
   )
 }

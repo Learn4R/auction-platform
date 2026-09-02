@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from 'react-native'
 import { AuctionsFilterModal, activeFilterCount, EMPTY_FILTERS, type AuctionFilters } from '../../components/AuctionsFilterModal'
 import { AuctionsSortModal, SORT_OPTIONS, type SortKey } from '../../components/AuctionsSortModal'
 import { ItemCard } from '../../components/ItemCard'
+import { Text } from '../../components/Text'
+import { TextInput } from '../../components/TextInput'
 import { colors } from '../../constants/colors'
 import { getCategories, getItemFilterOptions, getItems, type Category, type ItemFilterOptions, type ItemSummary } from '../../lib/api'
 
@@ -124,7 +126,9 @@ export default function Auctions() {
         renderItem={({ item }) => <ItemCard item={item} />}
         ListHeaderComponent={
           <View>
-            <Text style={styles.title}>All Auctions</Text>
+            <Text variant="display" style={styles.title}>
+              All Auctions
+            </Text>
 
             <TextInput
               style={styles.searchInput}
@@ -170,7 +174,9 @@ export default function Auctions() {
         }
         ListEmptyComponent={
           <View style={styles.empty} testID="auctions-empty">
-            <Text style={styles.emptyTitle}>No lots match these filters</Text>
+            <Text variant="display" style={styles.emptyTitle}>
+              No lots match these filters
+            </Text>
             <Text style={styles.emptySubtitle}>Try clearing a filter or checking back later.</Text>
           </View>
         }

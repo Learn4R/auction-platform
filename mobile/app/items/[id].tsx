@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native'
 import { CategoryThumb } from '../../components/CategoryThumb'
 import { ItemSpecs } from '../../components/ItemSpecs'
+import { LotTicket } from '../../components/LotTicket'
 import { StatusPill } from '../../components/StatusPill'
+import { Text } from '../../components/Text'
 import { colors } from '../../constants/colors'
 import { getItem, type ItemDetail } from '../../lib/api'
 import { formatCurrency, getPriceDisplay } from '../../lib/format'
@@ -65,27 +67,32 @@ export default function ItemDetailScreen() {
           {auction && <StatusPill status={auction.status} />}
         </View>
 
-        <Text style={styles.title} testID="item-detail-title">
+        <Text variant="display" style={styles.title} testID="item-detail-title">
           {item.title}
         </Text>
-        <Text style={styles.meta} testID="item-detail-seller">
+        <Text variant="mono" style={styles.meta} testID="item-detail-seller">
           {item.category.name} · Listed by {item.seller.name}
         </Text>
 
-        <View style={styles.priceBox}>
-          <Text style={styles.priceLabel}>{priceLabel}</Text>
-          <Text style={styles.price} testID="item-detail-price">
-            {price ? formatCurrency(price) : '—'}
-          </Text>
-        </View>
+        <LotTicket
+          size="lg"
+          label={priceLabel}
+          value={price ? formatCurrency(price) : '—'}
+          valueTestID="item-detail-price"
+          style={styles.priceBox}
+        />
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Details</Text>
+          <Text variant="mono" style={styles.sectionTitle}>
+            Details
+          </Text>
           <ItemSpecs item={item} />
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Description</Text>
+          <Text variant="mono" style={styles.sectionTitle}>
+            Description
+          </Text>
           <Text style={styles.description} testID="item-detail-description">
             {item.description}
           </Text>
@@ -128,23 +135,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   priceBox: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    padding: 16,
+    alignSelf: 'flex-start',
     marginBottom: 24,
-  },
-  priceLabel: {
-    fontSize: 10,
-    letterSpacing: 0.6,
-    color: colors.gray,
-    textTransform: 'uppercase',
-    marginBottom: 4,
-  },
-  price: {
-    fontSize: 26,
-    fontWeight: '700',
-    color: colors.royal,
   },
   section: {
     marginBottom: 24,

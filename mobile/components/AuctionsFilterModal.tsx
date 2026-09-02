@@ -1,5 +1,7 @@
-import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
+import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { CollapsibleSection } from './CollapsibleSection'
+import { Text } from './Text'
+import { TextInput } from './TextInput'
 import { colors } from '../constants/colors'
 import type { AuctionStatus, Category, ItemFilterOptions } from '../lib/api'
 
@@ -131,7 +133,9 @@ export function AuctionsFilterModal({
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <View style={styles.container} testID="filter-modal">
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Filters</Text>
+          <Text variant="display" style={styles.headerTitle}>
+            Filters
+          </Text>
           <Pressable onPress={onClose} testID="filter-modal-close" hitSlop={8}>
             <Text style={styles.closeText}>✕</Text>
           </Pressable>
@@ -139,12 +143,16 @@ export function AuctionsFilterModal({
 
         <ScrollView contentContainerStyle={styles.content}>
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Status</Text>
+            <Text variant="mono" style={styles.sectionTitle}>
+              Status
+            </Text>
             <StatusPills value={filters.status} onChange={(v) => update('status', v)} />
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Category</Text>
+            <Text variant="mono" style={styles.sectionTitle}>
+              Category
+            </Text>
             <View style={styles.categoryList}>
               {categories.map((cat) => {
                 const checked = filters.categorySlugs.has(cat.slug)
@@ -157,7 +165,9 @@ export function AuctionsFilterModal({
                   >
                     <View style={[styles.checkbox, checked && styles.checkboxChecked]} />
                     <Text style={styles.categoryLabel}>{cat.name}</Text>
-                    <Text style={styles.categoryCount}>{cat.itemCount}</Text>
+                    <Text variant="mono" style={styles.categoryCount}>
+                      {cat.itemCount}
+                    </Text>
                   </Pressable>
                 )
               })}
@@ -165,7 +175,9 @@ export function AuctionsFilterModal({
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Price Range (₹)</Text>
+            <Text variant="mono" style={styles.sectionTitle}>
+              Price Range (₹)
+            </Text>
             <View style={styles.priceRow}>
               <TextInput
                 style={[styles.input, styles.priceInput]}

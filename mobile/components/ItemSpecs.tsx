@@ -1,6 +1,7 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import { colors } from '../constants/colors'
 import type { ItemDetail } from '../lib/api'
+import { Text } from './Text'
 
 type SpecItem = Pick<
   ItemDetail,

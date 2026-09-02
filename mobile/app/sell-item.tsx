@@ -2,17 +2,10 @@ import { useEffect, useState } from 'react'
 import { router, Stack } from 'expo-router'
 import * as ImagePicker from 'expo-image-picker'
 import { Image } from 'expo-image'
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native'
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { DateTimeField } from '../components/DateTimeField'
+import { Text } from '../components/Text'
+import { TextInput } from '../components/TextInput'
 import { colors } from '../constants/colors'
 import { getCategories, submitItem, type Category, type ItemImagePick } from '../lib/api'
 import { useAuth } from '../lib/auth'
@@ -218,7 +211,9 @@ export default function SellItem() {
             </View>
           )}
 
-          <Text style={styles.sectionTitle}>Category</Text>
+          <Text variant="mono" style={styles.sectionTitle}>
+            Category
+          </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow} testID="category-picker">
             {categories.map((cat) => (
               <Pressable
@@ -232,7 +227,9 @@ export default function SellItem() {
             ))}
           </ScrollView>
 
-          <Text style={styles.sectionTitle}>Item Details</Text>
+          <Text variant="mono" style={styles.sectionTitle}>
+            Item Details
+          </Text>
           <Field label="Title">
             <TextInput style={styles.input} value={form.title} onChangeText={(v) => update('title', v)} testID="sell-title" />
           </Field>
@@ -279,7 +276,9 @@ export default function SellItem() {
             </Field>
           </View>
 
-          <Text style={styles.sectionTitle}>Photos (up to {MAX_IMAGES})</Text>
+          <Text variant="mono" style={styles.sectionTitle}>
+            Photos (up to {MAX_IMAGES})
+          </Text>
           <View style={styles.thumbRow} testID="sell-item-images">
             {images.map((img, i) => (
               <View key={img.uri} style={styles.thumbWrap}>
@@ -304,7 +303,9 @@ export default function SellItem() {
             </Text>
           )}
 
-          <Text style={styles.sectionTitle}>Authenticity & Condition</Text>
+          <Text variant="mono" style={styles.sectionTitle}>
+            Authenticity & Condition
+          </Text>
           <Field label="Condition">
             <TextInput style={styles.input} value={form.condition} onChangeText={(v) => update('condition', v)} placeholder="e.g. Extremely Fine" />
           </Field>
@@ -330,7 +331,9 @@ export default function SellItem() {
             />
           </Field>
 
-          <Text style={styles.sectionTitle}>Auction Settings</Text>
+          <Text variant="mono" style={styles.sectionTitle}>
+            Auction Settings
+          </Text>
           <View style={styles.row}>
             <Field label="Starting Bid (₹)" style={styles.half}>
               <TextInput
@@ -404,8 +407,8 @@ const styles = StyleSheet.create({
   },
   successBox: {
     borderWidth: 1,
-    borderColor: 'rgba(34,164,90,0.3)',
-    backgroundColor: 'rgba(34,164,90,0.08)',
+    borderColor: 'rgba(22,133,91,0.3)',
+    backgroundColor: 'rgba(22,133,91,0.08)',
     borderRadius: 10,
     padding: 14,
     marginBottom: 20,
@@ -413,7 +416,7 @@ const styles = StyleSheet.create({
   },
   successText: {
     fontSize: 13.5,
-    color: '#1a9550',
+    color: colors.green,
   },
   successBold: {
     fontWeight: '700',
@@ -421,7 +424,7 @@ const styles = StyleSheet.create({
   successLink: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#1a9550',
+    color: colors.green,
     textDecorationLine: 'underline',
   },
   sectionTitle: {

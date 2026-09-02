@@ -1,9 +1,11 @@
 import { useCallback, useState } from 'react'
 import { router, Stack, useFocusEffect } from 'expo-router'
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from 'react-native'
+import { LotTicket } from '../components/LotTicket'
 import { PaymentStatusPill } from '../components/PaymentStatusPill'
 import { ShippingAddressForm } from '../components/ShippingAddressForm'
 import { ShippingProgress } from '../components/ShippingProgress'
+import { Text } from '../components/Text'
 import { colors } from '../constants/colors'
 import { getMyProfile, getOrders, type MyProfile, type Order } from '../lib/api'
 import { useAuth } from '../lib/auth'
@@ -59,7 +61,9 @@ export default function MyOrders() {
           renderItem={({ item }) => <OrderRow order={item} profile={profile} onAddressSaved={handleAddressSaved} />}
           ListEmptyComponent={
             <View style={styles.empty} testID="my-orders-empty">
-              <Text style={styles.emptyTitle}>No orders yet</Text>
+              <Text variant="display" style={styles.emptyTitle}>
+                No orders yet
+              </Text>
               <Text style={styles.emptySubtitle}>Win an auction and it&apos;ll show up here.</Text>
             </View>
           }
@@ -84,38 +88,37 @@ function OrderRow({
     <View style={styles.row} testID={`order-${order.id}`}>
       <View style={styles.rowTop}>
         <View style={styles.rowTitleBlock}>
-          <Text style={styles.category}>{order.auction.item.category.name}</Text>
-          <Text style={styles.title}>{order.auction.item.title}</Text>
-          <Text style={styles.won}>Won {formatDateTime(order.createdAt)}</Text>
+          <Text variant="mono" style={styles.category}>
+            {order.auction.item.category.name}
+          </Text>
+          <Text variant="display" style={styles.title}>
+            {order.auction.item.title}
+          </Text>
+          <Text variant="mono" style={styles.won}>
+            Won {formatDateTime(order.createdAt)}
+          </Text>
         </View>
         <PaymentStatusPill status={order.paymentStatus} />
       </View>
 
       <View style={styles.amountsRow}>
-        <View>
-          <Text style={styles.amountLabel}>Winning Bid</Text>
-          <Text style={styles.amountValue}>{formatCurrency(order.winningBid)}</Text>
-        </View>
-        <View>
-          <Text style={styles.amountLabel}>Buyer Premium</Text>
-          <Text style={styles.amountValue}>{formatCurrency(order.buyerPremium)}</Text>
-        </View>
-        <View>
-          <Text style={styles.amountLabel}>Total</Text>
-          <Text style={[styles.amountValue, styles.amountTotal]}>{formatCurrency(order.totalAmount)}</Text>
-        </View>
+        <LotTicket size="sm" label="Winning Bid" value={formatCurrency(order.winningBid)} style={styles.amountTicket} />
+        <LotTicket size="sm" label="Buyer Premium" value={formatCurrency(order.buyerPremium)} style={styles.amountTicket} />
+        <LotTicket size="sm" label="Total" value={formatCurrency(order.totalAmount)} style={styles.amountTicket} />
       </View>
 
       {hasAddress && <ShippingAddressSummary order={order} />}
 
       {order.paymentStatus === 'paid' ? (
         <View style={styles.shippingSection}>
-          <Text style={styles.sectionLabel}>Shipping Status</Text>
+          <Text variant="mono" style={styles.sectionLabel}>
+            Shipping Status
+          </Text>
           <ShippingProgress status={order.shippingStatus} />
         </View>
       ) : order.paymentStatus === 'refunded' ? (
         <View style={styles.shippingSection}>
-          <Text style={styles.sectionLabel}>
+          <Text variant="mono" style={styles.sectionLabel}>
             Refunded{order.refundedAt ? ` ${formatDateTime(order.refundedAt)}` : ''}
           </Text>
           {order.refundReason && <Text style={styles.refundReason}>{order.refundReason}</Text>}
@@ -145,7 +148,9 @@ function OrderRow({
 function ShippingAddressSummary({ order }: { order: Order }) {
   return (
     <View style={styles.addressBox} testID={`shipping-summary-${order.id}`}>
-      <Text style={styles.sectionLabel}>Shipping To</Text>
+      <Text variant="mono" style={styles.sectionLabel}>
+        Shipping To
+      </Text>
       <Text style={styles.addressName}>{order.shippingName}</Text>
       <Text style={styles.addressLine}>{order.shippingAddressLine1}</Text>
       {order.shippingAddressLine2 && <Text style={styles.addressLine}>{order.shippingAddressLine2}</Text>}
@@ -207,25 +212,13 @@ const styles = StyleSheet.create({
   },
   amountsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    gap: 8,
     borderTopWidth: 1,
     borderTopColor: colors.border,
     paddingTop: 12,
   },
-  amountLabel: {
-    fontSize: 9.5,
-    color: colors.gray,
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-  },
-  amountValue: {
-    fontSize: 13.5,
-    fontWeight: '600',
-    color: colors.charcoal,
-    marginTop: 2,
-  },
-  amountTotal: {
-    color: colors.royal,
+  amountTicket: {
+    flex: 1,
   },
   addressBox: {
     borderTopWidth: 1,

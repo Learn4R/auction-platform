@@ -1,16 +1,10 @@
 import { useState } from 'react'
 import { Link, router } from 'expo-router'
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native'
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native'
+import { Text } from '../components/Text'
+import { TextInput } from '../components/TextInput'
 import { colors } from '../constants/colors'
+import { fonts } from '../constants/fonts'
 import { useAuth } from '../lib/auth'
 import type { RegisterableRole } from '../lib/api'
 
@@ -50,7 +44,9 @@ export default function Signup() {
       style={styles.container}
     >
       <View style={styles.form}>
-        <Text style={styles.title}>Sign Up</Text>
+        <Text variant="display" style={styles.title}>
+          Sign Up
+        </Text>
         <Text style={styles.subtitle}>Create an account to bid, or sell items of your own.</Text>
 
         <Text style={styles.label}>Name</Text>
@@ -228,5 +224,6 @@ const styles = StyleSheet.create({
     color: colors.royal,
     fontWeight: '600',
     fontSize: 13.5,
+    fontFamily: fonts.bodySemiBold,
   },
 })

@@ -1,10 +1,12 @@
 import { router } from 'expo-router'
-import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { Pressable, StyleSheet, View } from 'react-native'
 import { colors } from '../constants/colors'
 import type { ItemSummary } from '../lib/api'
 import { formatCountdown, formatCurrency, getPriceDisplay } from '../lib/format'
 import { CategoryThumb } from './CategoryThumb'
+import { LotTicket } from './LotTicket'
 import { StatusPill } from './StatusPill'
+import { Text } from './Text'
 import { WatchlistButton } from './WatchlistButton'
 
 export function ItemCard({ item }: { item: ItemSummary }) {
@@ -23,21 +25,23 @@ export function ItemCard({ item }: { item: ItemSummary }) {
       </View>
       <View style={styles.body}>
         <View style={styles.topRow}>
-          <Text style={styles.category}>{item.category.name.toUpperCase()}</Text>
+          <Text variant="mono" style={styles.category}>
+            {item.category.name.toUpperCase()}
+          </Text>
           {auction && <StatusPill status={auction.status} />}
         </View>
         <Text style={styles.title} numberOfLines={2}>
           {item.title}
         </Text>
         <View style={styles.bottomRow}>
-          <View>
-            <Text style={styles.priceLabel}>{priceLabel}</Text>
-            <Text style={styles.price} testID={`item-card-price-${item.id}`}>
-              {price ? formatCurrency(price) : '—'}
-            </Text>
-          </View>
+          <LotTicket
+            size="sm"
+            label={priceLabel}
+            value={price ? formatCurrency(price) : '—'}
+            valueTestID={`item-card-price-${item.id}`}
+          />
           {auction && auction.status !== 'ended' && (
-            <Text style={styles.countdown}>
+            <Text variant="mono" style={styles.countdown}>
               {auction.status === 'live' ? formatCountdown(auction.endTime) : formatCountdown(auction.startTime)}
             </Text>
           )}
@@ -91,21 +95,10 @@ const styles = StyleSheet.create({
     lineHeight: 19,
   },
   bottomRow: {
-    marginTop: 4,
+    marginTop: 8,
     flexDirection: 'row',
     alignItems: 'flex-end',
     justifyContent: 'space-between',
-  },
-  priceLabel: {
-    fontSize: 9.5,
-    letterSpacing: 0.6,
-    color: colors.gray,
-    textTransform: 'uppercase',
-  },
-  price: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.royal,
   },
   countdown: {
     fontSize: 12,

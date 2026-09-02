@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { router } from 'expo-router'
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from 'react-native'
+import { Text } from '../../components/Text'
 import { colors } from '../../constants/colors'
 import { getAllNotifications, markNotificationRead as apiMarkNotificationRead, type AppNotification, type PaginatedNotifications } from '../../lib/api'
 import { useAuth } from '../../lib/auth'
@@ -96,14 +97,22 @@ export default function Notifications() {
           {!n.read && <View style={styles.unreadDot} testID={`notification-unread-dot-${n.id}`} />}
           <View style={styles.rowBody}>
             <Text style={[styles.message, !n.read && styles.messageUnread]}>{n.message}</Text>
-            <Text style={styles.timestamp}>{formatDateTime(n.createdAt)}</Text>
+            <Text variant="mono" style={styles.timestamp}>
+              {formatDateTime(n.createdAt)}
+            </Text>
           </View>
         </Pressable>
       )}
-      ListHeaderComponent={<Text style={styles.title}>Notifications</Text>}
+      ListHeaderComponent={
+        <Text variant="display" style={styles.title}>
+          Notifications
+        </Text>
+      }
       ListEmptyComponent={
         <View style={styles.empty} testID="notifications-empty">
-          <Text style={styles.emptyTitle}>No notifications</Text>
+          <Text variant="display" style={styles.emptyTitle}>
+            No notifications
+          </Text>
           <Text style={styles.emptySubtitle}>You don&apos;t have any notifications yet.</Text>
         </View>
       }

@@ -1,7 +1,9 @@
 import { useCallback, useState } from 'react'
 import { Link, router, useFocusEffect } from 'expo-router'
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native'
+import { Text } from '../../components/Text'
 import { colors } from '../../constants/colors'
+import { fonts } from '../../constants/fonts'
 import { getMyProfile, getMySellerApplication, type MyProfile, type MySellerApplication } from '../../lib/api'
 import { useAuth } from '../../lib/auth'
 
@@ -32,7 +34,7 @@ export default function Profile() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content} testID="profile-screen">
       <View style={styles.header}>
-        <Text style={styles.greeting} testID="profile-greeting">
+        <Text variant="display" style={styles.greeting} testID="profile-greeting">
           Logged in as {user?.name}
         </Text>
         {profile ? (
@@ -42,7 +44,9 @@ export default function Profile() {
         ) : (
           <ActivityIndicator color={colors.royal} style={styles.emailLoader} testID="profile-loading" />
         )}
-        <Text style={styles.role}>{user?.role}</Text>
+        <Text variant="mono" style={styles.role}>
+          {user?.role}
+        </Text>
       </View>
 
       {error && (
@@ -52,7 +56,9 @@ export default function Profile() {
       )}
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Orders</Text>
+        <Text variant="mono" style={styles.sectionTitle}>
+          Orders
+        </Text>
         <View style={styles.card}>
           <Text style={styles.cardText}>Lots you&apos;ve won, with payment and shipping status.</Text>
           <Pressable style={styles.primaryButton} onPress={() => router.push('/my-orders')} testID="my-orders-link">
@@ -62,7 +68,9 @@ export default function Profile() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Selling</Text>
+        <Text variant="mono" style={styles.sectionTitle}>
+          Selling
+        </Text>
         {sellerInfo ? (
           <SellerStatusCard
             status={sellerInfo.sellerStatus}
@@ -247,6 +255,7 @@ const styles = StyleSheet.create({
     color: colors.royal,
     fontWeight: '600',
     fontSize: 13.5,
+    fontFamily: fonts.bodySemiBold,
   },
   logoutButton: {
     backgroundColor: colors.royal,

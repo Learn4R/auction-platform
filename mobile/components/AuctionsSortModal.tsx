@@ -1,5 +1,6 @@
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native'
+import { Modal, Pressable, StyleSheet, View } from 'react-native'
 import { colors } from '../constants/colors'
+import { Text } from './Text'
 
 export type SortKey = 'recommended' | 'ending' | 'newest' | 'low' | 'high' | 'mostBids'
 
@@ -27,7 +28,9 @@ export function AuctionsSortModal({
     <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose} testID="sort-modal-backdrop">
         <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()} testID="sort-modal">
-          <Text style={styles.title}>Sort By</Text>
+          <Text variant="display" style={styles.title}>
+            Sort By
+          </Text>
           {SORT_OPTIONS.map((opt) => (
             <Pressable
               key={opt.value}

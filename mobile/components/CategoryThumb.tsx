@@ -1,5 +1,6 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import { colors } from '../constants/colors'
+import { Text } from './Text'
 
 // A simple placeholder visual for an item with no photo yet — a colored
 // block bearing the category's initial, echoing the same fallback the web

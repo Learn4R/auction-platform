@@ -1,7 +1,8 @@
 import { useCallback, useState } from 'react'
 import { useFocusEffect } from 'expo-router'
-import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native'
 import { ItemCard } from '../../components/ItemCard'
+import { Text } from '../../components/Text'
 import { colors } from '../../constants/colors'
 import { getWatchlist, type ItemSummary } from '../../lib/api'
 import { useAuth } from '../../lib/auth'
@@ -53,10 +54,16 @@ export default function Watchlist() {
       keyExtractor={(item) => item.id}
       ItemSeparatorComponent={() => <View style={styles.separator} />}
       renderItem={({ item }) => <ItemCard item={item} />}
-      ListHeaderComponent={<Text style={styles.title}>Watchlist</Text>}
+      ListHeaderComponent={
+        <Text variant="display" style={styles.title}>
+          Watchlist
+        </Text>
+      }
       ListEmptyComponent={
         <View style={styles.empty} testID="watchlist-empty">
-          <Text style={styles.emptyTitle}>Your watchlist is empty</Text>
+          <Text variant="display" style={styles.emptyTitle}>
+            Your watchlist is empty
+          </Text>
           <Text style={styles.emptySubtitle}>Tap the heart on any lot to save it here.</Text>
         </View>
       }

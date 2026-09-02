@@ -1,18 +1,12 @@
 import { router, Link, Stack, useLocalSearchParams } from 'expo-router'
 import { useEffect } from 'react'
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native'
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { CategoryThumb } from '../../components/CategoryThumb'
+import { LotTicket } from '../../components/LotTicket'
+import { Text } from '../../components/Text'
+import { TextInput } from '../../components/TextInput'
 import { colors } from '../../constants/colors'
+import { fonts } from '../../constants/fonts'
 import { formatCountdownPrecise, formatCurrency, formatDateTime } from '../../lib/format'
 import { useItemAuction } from '../../lib/useItemAuction'
 
@@ -85,11 +79,17 @@ export default function LiveAuctionScreen() {
         <Stack.Screen options={{ headerShown: true, title: item.title }} />
         <View style={styles.center} testID="live-ended">
           <CategoryThumb categoryName={item.category.name} size={96} />
-          <Text style={styles.endedTitle}>{item.title}</Text>
-          <Text style={styles.endedLabel}>{sold ? 'Hammer Price' : 'Auction Ended'}</Text>
-          <Text style={styles.endedPrice} testID="live-hammer-price">
-            {sold ? formatCurrency(auction.currentBid ?? auction.startingBid) : 'Unsold'}
+          <Text variant="display" style={styles.endedTitle}>
+            {item.title}
           </Text>
+          <LotTicket
+            style={styles.endedTicket}
+            size="lg"
+            align="center"
+            label={sold ? 'Hammer Price' : 'Auction Ended'}
+            value={sold ? formatCurrency(auction.currentBid ?? auction.startingBid) : 'Unsold'}
+            valueTestID="live-hammer-price"
+          />
           {sold && (
             <Text style={styles.endedWinner} testID="live-winner">
               Won by {auction.winner!.id === user?.id ? 'you' : auction.winner!.name}
@@ -105,7 +105,15 @@ export default function LiveAuctionScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ headerShown: true, title: item.title, headerStyle: { backgroundColor: colors.royal } }} />
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: item.title,
+          headerStyle: { backgroundColor: colors.royal },
+          headerTintColor: colors.white,
+          headerTitleStyle: { fontFamily: fonts.displaySemiBold, fontSize: 17, color: colors.white },
+        }}
+      />
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -114,12 +122,16 @@ export default function LiveAuctionScreen() {
           <View style={styles.liveBadgeRow}>
             <View style={styles.liveBadge}>
               <View style={styles.liveDot} />
-              <Text style={styles.liveBadgeText}>LIVE NOW</Text>
+              <Text variant="mono" style={styles.liveBadgeText}>
+                LIVE NOW
+              </Text>
             </View>
           </View>
 
-          <Text style={styles.title}>{item.title}</Text>
-          <Text style={styles.meta}>
+          <Text variant="display" style={styles.title}>
+            {item.title}
+          </Text>
+          <Text variant="mono" style={styles.meta}>
             {item.category.name} · Listed by {item.seller.name}
           </Text>
 
@@ -140,28 +152,38 @@ export default function LiveAuctionScreen() {
           )}
 
           <View style={styles.statsRow}>
+            <LotTicket
+              theme="dark"
+              size="md"
+              align="center"
+              label="Current Bid"
+              value={formatCurrency(price!)}
+              valueTestID="live-current-bid"
+              style={styles.statTicket}
+            />
             <View style={styles.statBox}>
-              <Text style={styles.statLabel}>Current Bid</Text>
-              <Text style={styles.statValueGold} testID="live-current-bid">
-                {formatCurrency(price!)}
+              <Text variant="mono" style={styles.statLabel}>
+                Time Left
               </Text>
-            </View>
-            <View style={styles.statBox}>
-              <Text style={styles.statLabel}>Time Left</Text>
-              <Text style={styles.statValue} testID="live-time-left">
+              <Text variant="mono" style={styles.statValue} testID="live-time-left">
                 {formatCountdownPrecise(auction.endTime)}
               </Text>
             </View>
             <View style={styles.statBox}>
-              <Text style={styles.statLabel}>Active Bidders</Text>
-              <Text style={styles.statValue} testID="live-watcher-count">
+              <Text variant="mono" style={styles.statLabel}>
+                Active Bidders
+              </Text>
+              <Text variant="mono" style={styles.statValue} testID="live-watcher-count">
                 {watcherCount ?? '—'}
               </Text>
             </View>
           </View>
 
           <Text style={styles.minNext}>
-            Minimum next bid: <Text style={styles.minNextAmount}>{formatCurrency(nextMin ?? 0)}</Text>
+            Minimum next bid:{' '}
+            <Text variant="mono" style={styles.minNextAmount}>
+              {formatCurrency(nextMin ?? 0)}
+            </Text>
           </Text>
 
           {!user ? (
@@ -204,7 +226,9 @@ export default function LiveAuctionScreen() {
           ) : (
             <View style={styles.confirmBox} testID="live-confirm-box">
               <Text style={styles.confirmLabel}>Confirm your bid of</Text>
-              <Text style={styles.confirmAmount}>{formatCurrency(bidInput)}</Text>
+              <Text variant="mono" style={styles.confirmAmount}>
+                {formatCurrency(bidInput)}
+              </Text>
               <View style={styles.confirmRow}>
                 <Pressable
                   style={[styles.confirmButton, bidBusy && styles.buttonDisabled]}
@@ -271,12 +295,18 @@ export default function LiveAuctionScreen() {
           )}
 
           <View style={styles.metaRow}>
-            <Text style={styles.metaSmall}>Started {formatDateTime(auction.startTime)}</Text>
-            <Text style={styles.metaSmall}>Increment {formatCurrency(auction.bidIncrement)}</Text>
+            <Text variant="mono" style={styles.metaSmall}>
+              Started {formatDateTime(auction.startTime)}
+            </Text>
+            <Text variant="mono" style={styles.metaSmall}>
+              Increment {formatCurrency(auction.bidIncrement)}
+            </Text>
           </View>
 
           <View style={styles.historySection}>
-            <Text style={styles.historyTitle}>Live Bid History</Text>
+            <Text variant="mono" style={styles.historyTitle}>
+              Live Bid History
+            </Text>
             {auction.bids.length === 0 ? (
               <Text style={styles.historyEmpty}>No bids placed yet. Be the first.</Text>
             ) : (
@@ -287,11 +317,15 @@ export default function LiveAuctionScreen() {
                       <Text style={styles.historyName}>{bid.user.name}</Text>
                       {bid.isProxy && (
                         <View style={styles.autoTag}>
-                          <Text style={styles.autoTagText}>AUTO</Text>
+                          <Text variant="mono" style={styles.autoTagText}>
+                            AUTO
+                          </Text>
                         </View>
                       )}
                     </View>
-                    <Text style={styles.historyAmount}>{formatCurrency(bid.amount)}</Text>
+                    <Text variant="mono" style={styles.historyAmount}>
+                      {formatCurrency(bid.amount)}
+                    </Text>
                   </View>
                 ))}
               </View>
@@ -352,7 +386,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 22,
-    fontWeight: '700',
+    fontWeight: '600',
     color: colors.white,
     marginBottom: 4,
   },
@@ -382,8 +416,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   winningBanner: {
-    borderColor: 'rgba(34,164,90,0.4)',
-    backgroundColor: 'rgba(34,164,90,0.15)',
+    borderColor: 'rgba(22,133,91,0.4)',
+    backgroundColor: 'rgba(22,133,91,0.15)',
   },
   winningText: {
     color: '#3FC172',
@@ -407,6 +441,9 @@ const styles = StyleSheet.create({
     marginBottom: 18,
     marginTop: 4,
   },
+  statTicket: {
+    flex: 1,
+  },
   statBox: {
     flex: 1,
     borderRadius: 12,
@@ -422,11 +459,6 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.5)',
     textTransform: 'uppercase',
     marginBottom: 6,
-  },
-  statValueGold: {
-    fontSize: 19,
-    fontWeight: '700',
-    color: colors.gold,
   },
   statValue: {
     fontSize: 19,
@@ -466,7 +498,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 17,
-    fontWeight: '600',
+    fontFamily: fonts.monoSemiBold,
     color: colors.white,
   },
   bidButton: {
@@ -567,7 +599,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: fonts.monoSemiBold,
     color: colors.white,
   },
   maxBidButton: {
@@ -661,23 +693,13 @@ const styles = StyleSheet.create({
   },
   endedTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '600',
     color: colors.royal,
     textAlign: 'center',
     marginTop: 16,
   },
-  endedLabel: {
-    fontSize: 11,
-    letterSpacing: 0.8,
-    color: colors.gray,
-    textTransform: 'uppercase',
+  endedTicket: {
     marginTop: 20,
-  },
-  endedPrice: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: colors.royal,
-    marginTop: 4,
   },
   endedWinner: {
     fontSize: 14,

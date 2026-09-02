@@ -1,8 +1,10 @@
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { useState } from 'react'
-import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
+import { Platform, Pressable, StyleSheet, View } from 'react-native'
 import { colors } from '../constants/colors'
 import { formatDateTime } from '../lib/format'
+import { Text } from './Text'
+import { TextInput } from './TextInput'
 
 // @react-native-community/datetimepicker has no web implementation at all —
 // there's no OS date/time UI to wrap in a browser, the same situation Phase

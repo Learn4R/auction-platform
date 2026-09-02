@@ -4,6 +4,7 @@ import { Redirect, Tabs } from 'expo-router'
 import type { ComponentProps } from 'react'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { colors } from '../../constants/colors'
+import { fonts } from '../../constants/fonts'
 import { useAuth } from '../../lib/auth'
 import { useNotifications } from '../../lib/notifications'
 
@@ -43,6 +44,7 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: colors.royal,
         tabBarInactiveTintColor: colors.gray,
+        tabBarLabelStyle: { fontFamily: fonts.bodyMedium, fontSize: 11 },
       }}
     >
       <Tabs.Screen

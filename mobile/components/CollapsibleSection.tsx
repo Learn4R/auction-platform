@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { Pressable, StyleSheet, View } from 'react-native'
 import { colors } from '../constants/colors'
+import { Text } from './Text'
 
 // A tap-to-expand section for the less-frequently-used attribute filters
 // (Year, Material, Condition, Grade) — keeps the filter modal from feeling
@@ -23,8 +24,14 @@ export function CollapsibleSection({
     <View style={styles.container}>
       <Pressable style={styles.header} onPress={() => setExpanded((v) => !v)} testID={testID}>
         <View style={styles.headerLeft}>
-          <Text style={styles.title}>{title}</Text>
-          {badge && <Text style={styles.badge}>{badge}</Text>}
+          <Text variant="mono" style={styles.title}>
+            {title}
+          </Text>
+          {badge && (
+            <Text variant="mono" style={styles.badge}>
+              {badge}
+            </Text>
+          )}
         </View>
         <Text style={styles.chevron}>{expanded ? '▲' : '▼'}</Text>
       </Pressable>

@@ -1,17 +1,19 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import { colors } from '../constants/colors'
 import type { PaymentStatus } from '../lib/api'
+import { Text } from './Text'
 
-// Mirrors client/src/components/OrderStatus.tsx's PaymentStatusBadge.
+// Mirrors client/src/components/OrderStatus.tsx's PaymentStatusBadge —
+// including its font-mono treatment for the pill text.
 const BG: Record<PaymentStatus, string> = {
   pending: 'rgba(201,162,39,0.1)',
-  paid: 'rgba(34,164,90,0.1)',
+  paid: 'rgba(22,133,91,0.1)',
   failed: 'rgba(200,59,59,0.1)',
   refunded: '#F3F4F6',
 }
 const FG: Record<PaymentStatus, string> = {
   pending: '#8a6e18',
-  paid: '#1a9550',
+  paid: colors.green,
   failed: colors.red,
   refunded: colors.gray,
 }
@@ -25,7 +27,9 @@ const LABELS: Record<PaymentStatus, string> = {
 export function PaymentStatusPill({ status }: { status: PaymentStatus }) {
   return (
     <View style={[styles.pill, { backgroundColor: BG[status] }]} testID={`payment-status-pill-${status}`}>
-      <Text style={[styles.text, { color: FG[status] }]}>{LABELS[status]}</Text>
+      <Text variant="mono" style={[styles.text, { color: FG[status] }]}>
+        {LABELS[status]}
+      </Text>
     </View>
   )
 }
