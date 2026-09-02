@@ -52,6 +52,16 @@ export default function Profile() {
       )}
 
       <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Orders</Text>
+        <View style={styles.card}>
+          <Text style={styles.cardText}>Lots you&apos;ve won, with payment and shipping status.</Text>
+          <Pressable style={styles.primaryButton} onPress={() => router.push('/my-orders')} testID="my-orders-link">
+            <Text style={styles.primaryButtonText}>My Orders</Text>
+          </Pressable>
+        </View>
+      </View>
+
+      <View style={styles.section}>
         <Text style={styles.sectionTitle}>Selling</Text>
         {sellerInfo ? (
           <SellerStatusCard

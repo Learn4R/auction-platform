@@ -191,6 +191,13 @@ export interface MyProfile {
   name: string
   email: string
   role: Role
+  defaultShippingName: string | null
+  defaultShippingPhone: string | null
+  defaultShippingAddressLine1: string | null
+  defaultShippingAddressLine2: string | null
+  defaultShippingCity: string | null
+  defaultShippingState: string | null
+  defaultShippingPincode: string | null
 }
 
 export function getMyProfile(token: string) {
@@ -350,4 +357,73 @@ export function submitItem(data: ItemSubmissionInput, token: string) {
     }
   }
   return request<ItemSubmission>('/api/items', { method: 'POST', token, body: form })
+}
+
+export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded'
+export type ShippingStatus = 'processing' | 'shipped' | 'inTransit' | 'delivered'
+
+export interface OrderReview {
+  id: string
+  rating: number
+  comment: string | null
+  createdAt: string
+}
+
+// Mirrors client/src/lib/api.ts's Order exactly — same backend, same shape.
+export interface Order {
+  id: string
+  winningBid: string
+  buyerPremium: string
+  totalAmount: string
+  paymentStatus: PaymentStatus
+  shippingStatus: ShippingStatus
+  razorpayOrderId: string | null
+  createdAt: string
+  shippingName: string | null
+  shippingPhone: string | null
+  shippingAddressLine1: string | null
+  shippingAddressLine2: string | null
+  shippingCity: string | null
+  shippingState: string | null
+  shippingPincode: string | null
+  refundReason: string | null
+  refundedAt: string | null
+  auction: { id: string; endTime: string; item: { id: string; title: string; category: { name: string } } }
+  review: OrderReview | null
+}
+
+export function getOrders(token: string) {
+  return request<Order[]>('/api/orders', { token })
+}
+
+export interface ShippingAddressInput {
+  name: string
+  phone: string
+  addressLine1: string
+  addressLine2?: string
+  city: string
+  state: string
+  pincode: string
+  saveAsDefault?: boolean
+}
+
+export function saveShippingAddress(orderId: string, data: ShippingAddressInput, token: string) {
+  return request<Order>(`/api/orders/${orderId}/shipping-address`, { method: 'PATCH', token, body: data })
+}
+
+export function createPayment(orderId: string, token: string) {
+  return request<{ razorpayOrderId: string; amount: number; currency: string; keyId: string }>(
+    `/api/orders/${orderId}/create-payment`,
+    { method: 'POST', token },
+  )
+}
+
+export interface RazorpayVerifyPayload {
+  razorpay_order_id: string
+  razorpay_payment_id: string
+  razorpay_signature: string
+}
+
+export function verifyPayment(orderId: string, payload: RazorpayVerifyPayload, token: string) {
+  return request<Order>(`/api/orders/${orderId}/verify-payment`, { method: 'POST', token, body: payload })
 }
