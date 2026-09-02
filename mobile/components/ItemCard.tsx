@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native'
 import { colors } from '../constants/colors'
 import type { ItemSummary } from '../lib/api'
 import { formatCountdown, formatCurrency, getPriceDisplay } from '../lib/format'
-import { CategoryThumb } from './CategoryThumb'
+import { Emblem } from './Emblem'
 import { LotTicket } from './LotTicket'
 import { StatusPill } from './StatusPill'
 import { Text } from './Text'
@@ -20,7 +20,7 @@ export function ItemCard({ item }: { item: ItemSummary }) {
       testID={`item-card-${item.id}`}
     >
       <View style={styles.thumbWrap}>
-        <CategoryThumb categoryName={item.category.name} size={64} />
+        <Emblem item={item} size={64} />
         <WatchlistButton itemId={item.id} style={styles.watchlistButton} />
       </View>
       <View style={styles.body}>
@@ -66,10 +66,21 @@ const styles = StyleSheet.create({
   },
   thumbWrap: {
     position: 'relative',
+    width: 64,
+    height: 64,
+    borderRadius: 14,
+    backgroundColor: '#F6F3EC',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
   },
   watchlistButton: {
+    // Bottom corner, not top — the Emblem's certification seal (see
+    // components/Emblem.tsx's CertSeal) always sits in the illustration's
+    // upper-right, so anchoring the heart there too would cover it on every
+    // certified item's card.
     position: 'absolute',
-    top: -6,
+    bottom: -6,
     right: -6,
   },
   body: {

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { router } from 'expo-router'
 import { ActivityIndicator, FlatList, Pressable, ScrollView, StyleSheet, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { CategoryThumb } from '../../components/CategoryThumb'
 import { HeroMedallion } from '../../components/HeroMedallion'
 import { ItemCard } from '../../components/ItemCard'
@@ -94,6 +95,12 @@ function CategoryRail({ categories }: { categories: Category[] }) {
 }
 
 export default function Home() {
+  // The tab navigator renders this screen with headerShown: false (see
+  // (tabs)/_layout.tsx), so nothing else reserves space for the status
+  // bar/notch — the hero has to add that padding itself, or its eyebrow
+  // sits right under the clock/signal icons on any real device.
+  const insets = useSafeAreaInsets()
+
   const [items, setItems] = useState<ItemSummary[] | null>(null)
   const [categories, setCategories] = useState<Category[] | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -113,7 +120,7 @@ export default function Home() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content} testID="home-scroll">
-      <View style={styles.hero} testID="home-hero">
+      <View style={[styles.hero, { paddingTop: insets.top + 16 }]} testID="home-hero">
         <View style={styles.eyebrowRow}>
           <View style={styles.eyebrowRule} />
           <Text variant="mono" style={styles.eyebrow}>
@@ -193,7 +200,7 @@ const styles = StyleSheet.create({
   hero: {
     padding: 20,
     paddingTop: 24,
-    paddingBottom: 32,
+    paddingBottom: 6,
     backgroundColor: '#FDFCFA',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(23,59,112,0.07)',
@@ -241,7 +248,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingVertical: 14,
     paddingHorizontal: 24,
-    marginBottom: 28,
+    marginBottom: 16,
   },
   heroButtonPressed: {
     opacity: 0.88,
