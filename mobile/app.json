@@ -39,7 +39,15 @@
           }
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Mudra House needs access to your photos so you can add pictures of items you're listing for auction.",
+          "cameraPermission": "Mudra House needs access to your camera so you can take a photo of an item you're listing for auction."
+        }
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true,

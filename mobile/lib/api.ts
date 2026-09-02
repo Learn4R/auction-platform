@@ -16,13 +16,15 @@ interface RequestOptions {
 // client/src/lib/api.ts already uses for the same backend.
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const headers: Record<string, string> = {}
-  if (options.body !== undefined) headers['Content-Type'] = 'application/json'
+  const isFormData = options.body instanceof FormData
+  // Let RN's fetch set the multipart Content-Type (with boundary) itself.
+  if (options.body !== undefined && !isFormData) headers['Content-Type'] = 'application/json'
   if (options.token) headers.Authorization = `Bearer ${options.token}`
 
   const res = await fetch(`${API_URL}${path}`, {
     method: options.method ?? 'GET',
     headers,
-    body: options.body === undefined ? undefined : JSON.stringify(options.body),
+    body: options.body === undefined ? undefined : isFormData ? (options.body as FormData) : JSON.stringify(options.body),
   })
 
   if (!res.ok) {
@@ -171,4 +173,181 @@ export interface PaginatedNotifications {
 
 export function getAllNotifications(page: number, token: string) {
   return request<PaginatedNotifications>(`/api/notifications/all?page=${page}`, { token })
+}
+
+export interface Category {
+  id: string
+  name: string
+  slug: string
+  itemCount: number
+}
+
+export function getCategories() {
+  return request<Category[]>('/api/categories')
+}
+
+export interface MyProfile {
+  id: string
+  name: string
+  email: string
+  role: Role
+}
+
+export function getMyProfile(token: string) {
+  return request<MyProfile>('/api/auth/me', { token })
+}
+
+export type SellerStatus = 'none' | 'pending' | 'approved' | 'rejected'
+export type SellerApplicationStatus = 'pending' | 'approved' | 'rejected'
+
+export interface SellerApplication {
+  id: string
+  fullName: string
+  mobile: string
+  address: string
+  city: string
+  state: string
+  pincode: string
+  panNumber: string
+  bankAccountNumber: string
+  bankIFSC: string
+  status: SellerApplicationStatus
+  rejectionReason: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface SellerApplicationInput {
+  fullName: string
+  mobile: string
+  address: string
+  city: string
+  state: string
+  pincode: string
+  panNumber: string
+  bankAccountNumber: string
+  bankIFSC: string
+}
+
+export interface MySellerApplication {
+  sellerStatus: SellerStatus
+  application: SellerApplication | null
+}
+
+export function getMySellerApplication(token: string) {
+  return request<MySellerApplication>('/api/seller/application', { token })
+}
+
+export function applyToSell(data: SellerApplicationInput, token: string) {
+  return request<SellerApplication>('/api/seller/apply', { method: 'POST', token, body: data })
+}
+
+export type ItemStatus = 'draft' | 'submitted' | 'under_review' | 'changes_requested' | 'approved' | 'rejected'
+
+// The seller's own view of a listing they've submitted — every text field is
+// nullable because a draft can be saved before any of them are filled in.
+// Mirrors client/src/lib/api.ts's ItemSubmission exactly.
+export interface ItemSubmission {
+  id: string
+  title: string | null
+  description: string | null
+  year: number | null
+  material: string | null
+  condition: string | null
+  denomination: string | null
+  mint: string | null
+  rulerAuthority: string | null
+  period: string | null
+  weight: string | null
+  diameter: string | null
+  grade: string | null
+  certificateNumber: string | null
+  gradingCompany: string | null
+  provenance: string | null
+  images: string[]
+  status: ItemStatus
+  displayStatus: string | null
+  category: { id: string; name: string; slug: string } | null
+  proposedStartingBid: string | null
+  proposedBidIncrement: string | null
+  proposedStartTime: string | null
+  proposedEndTime: string | null
+  rejectionReason: string | null
+  changesRequestedNote: string | null
+}
+
+export function getMyItems(token: string) {
+  return request<ItemSubmission[]>('/api/seller/items', { token })
+}
+
+// React Native's fetch/FormData expects a plain {uri, name, type} object for
+// a file part on native — not a browser File/Blob, which is what
+// client/src/lib/api.ts appends on web. expo-image-picker's own web
+// implementation hands back a real File on its ImagePickerAsset.file for
+// exactly this reason, so webFile just carries that through when present;
+// submitItem below picks whichever one the current platform needs.
+export interface ItemImagePick {
+  uri: string
+  name: string
+  type: string
+  webFile?: File
+}
+
+export interface ItemSubmissionInput {
+  title: string
+  description: string
+  categoryId: string
+  year: number | null
+  material: string
+  condition: string
+  denomination: string
+  mint: string
+  rulerAuthority: string
+  period: string
+  weight: string
+  diameter: string
+  grade: string
+  certificateNumber: string
+  gradingCompany: string
+  provenance: string
+  images: ItemImagePick[]
+  startingBid: number
+  bidIncrement: number
+  startTime: string
+  endTime: string
+}
+
+export function submitItem(data: ItemSubmissionInput, token: string) {
+  const form = new FormData()
+  form.append('title', data.title)
+  form.append('description', data.description)
+  form.append('categoryId', data.categoryId)
+  if (data.year !== null) form.append('year', String(data.year))
+  form.append('material', data.material)
+  form.append('condition', data.condition)
+  form.append('denomination', data.denomination)
+  form.append('mint', data.mint)
+  form.append('rulerAuthority', data.rulerAuthority)
+  form.append('period', data.period)
+  form.append('weight', data.weight)
+  form.append('diameter', data.diameter)
+  form.append('grade', data.grade)
+  form.append('certificateNumber', data.certificateNumber)
+  form.append('gradingCompany', data.gradingCompany)
+  form.append('provenance', data.provenance)
+  form.append('startingBid', String(data.startingBid))
+  form.append('bidIncrement', String(data.bidIncrement))
+  form.append('startTime', data.startTime)
+  form.append('endTime', data.endTime)
+  for (const img of data.images) {
+    if (img.webFile) {
+      form.append('images', img.webFile, img.name)
+    } else {
+      // @ts-expect-error React Native's FormData accepts a {uri, name, type}
+      // object for file parts on native; the DOM lib's FormData types don't
+      // know that shape.
+      form.append('images', { uri: img.uri, name: img.name, type: img.type })
+    }
+  }
+  return request<ItemSubmission>('/api/items', { method: 'POST', token, body: form })
 }

@@ -14,6 +14,9 @@ export default function RootLayout() {
             <Stack.Screen name="signup" />
             <Stack.Screen name="items/[id]" />
             <Stack.Screen name="live/[id]" />
+            <Stack.Screen name="apply-to-sell" />
+            <Stack.Screen name="sell-item" />
+            <Stack.Screen name="my-listings" />
           </Stack>
         </NotificationProvider>
       </WatchlistProvider>
