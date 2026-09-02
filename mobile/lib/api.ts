@@ -186,6 +186,18 @@ export function getCategories() {
   return request<Category[]>('/api/categories')
 }
 
+export interface ItemFilterOptions {
+  year: number[]
+  period: string[]
+  material: string[]
+  condition: string[]
+  grade: string[]
+}
+
+export function getItemFilterOptions() {
+  return request<ItemFilterOptions>('/api/items/filter-options')
+}
+
 export interface MyProfile {
   id: string
   name: string
