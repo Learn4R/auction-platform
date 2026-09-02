@@ -11,6 +11,7 @@ export const fonts = {
   displayMedium: 'Newsreader_500Medium',
   displaySemiBold: 'Newsreader_600SemiBold',
   displayBold: 'Newsreader_700Bold',
+  displayMediumItalic: 'Newsreader_500Medium_Italic',
   body: 'Inter_400Regular',
   bodyMedium: 'Inter_500Medium',
   bodySemiBold: 'Inter_600SemiBold',
@@ -22,7 +23,13 @@ export const fonts = {
 }
 
 // The exact font map to pass to useFonts() in app/_layout.tsx.
-export { Newsreader_400Regular, Newsreader_500Medium, Newsreader_600SemiBold, Newsreader_700Bold } from '@expo-google-fonts/newsreader'
+export {
+  Newsreader_400Regular,
+  Newsreader_500Medium,
+  Newsreader_600SemiBold,
+  Newsreader_700Bold,
+  Newsreader_500Medium_Italic,
+} from '@expo-google-fonts/newsreader'
 export { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter'
 export {
   IBMPlexMono_400Regular,

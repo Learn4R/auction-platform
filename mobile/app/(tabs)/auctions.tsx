@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useLocalSearchParams } from 'expo-router'
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from 'react-native'
 import { AuctionsFilterModal, activeFilterCount, EMPTY_FILTERS, type AuctionFilters } from '../../components/AuctionsFilterModal'
 import { AuctionsSortModal, SORT_OPTIONS, type SortKey } from '../../components/AuctionsSortModal'
@@ -6,7 +7,17 @@ import { ItemCard } from '../../components/ItemCard'
 import { Text } from '../../components/Text'
 import { TextInput } from '../../components/TextInput'
 import { colors } from '../../constants/colors'
-import { getCategories, getItemFilterOptions, getItems, type Category, type ItemFilterOptions, type ItemSummary } from '../../lib/api'
+import {
+  getCategories,
+  getItemFilterOptions,
+  getItems,
+  type AuctionStatus,
+  type Category,
+  type ItemFilterOptions,
+  type ItemSummary,
+} from '../../lib/api'
+
+const VALID_STATUSES: (AuctionStatus | 'all')[] = ['live', 'upcoming', 'ended']
 
 function itemPrice(item: ItemSummary): number {
   return Number(item.auction?.currentBid ?? item.auction?.startingBid ?? 0)
@@ -57,6 +68,13 @@ function matchesFilters(item: ItemSummary, f: AuctionFilters): boolean {
 // rest of the filters here since Category is multi-select and Price Range
 // has no server-side equivalent to round-trip to anyway.
 export default function Auctions() {
+  // Set when arriving from a "jump straight into a filtered view" link —
+  // Home's category rail (?category=<slug>) or its "Explore Live Auctions"
+  // hero button (?status=live). Re-applied whenever they change so a second
+  // jump while this tab is already mounted (React Navigation keeps tabs
+  // alive rather than remounting them) still updates the filters.
+  const { category: categoryParam, status: statusParam } = useLocalSearchParams<{ category?: string; status?: string }>()
+
   const [items, setItems] = useState<ItemSummary[] | null>(null)
   const [categories, setCategories] = useState<Category[]>([])
   const [filterOptions, setFilterOptions] = useState<ItemFilterOptions | null>(null)
@@ -79,6 +97,15 @@ export default function Auctions() {
       .then(setFilterOptions)
       .catch(() => {})
   }, [])
+
+  useEffect(() => {
+    if (!categoryParam && !statusParam) return
+    setFilters((f) => ({
+      ...f,
+      categorySlugs: categoryParam ? new Set([categoryParam]) : f.categorySlugs,
+      status: statusParam && (VALID_STATUSES as string[]).includes(statusParam) ? (statusParam as AuctionStatus) : f.status,
+    }))
+  }, [categoryParam, statusParam])
 
   const filteredItems = useMemo(() => {
     if (!items) return []
