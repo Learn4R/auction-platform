@@ -472,3 +472,24 @@ export interface RazorpayVerifyPayload {
 export function verifyPayment(orderId: string, payload: RazorpayVerifyPayload, token: string) {
   return request<Order>(`/api/orders/${orderId}/verify-payment`, { method: 'POST', token, body: payload })
 }
+
+export type PayoutStatus = 'pending' | 'processing' | 'paid' | 'failed' | 'on_hold'
+
+// Mirrors client/src/lib/api.ts's SellerPayout exactly. grossAmount/
+// commissionAmount/netAmount are Prisma Decimals serialized as strings —
+// stored verbatim on the Payout row when the order was marked paid, not
+// recomputed here, so gross - commission === net by construction.
+export interface SellerPayout {
+  id: string
+  grossAmount: string
+  commissionAmount: string
+  netAmount: string
+  status: PayoutStatus
+  createdAt: string
+  updatedAt: string
+  order: { id: string; auction: { item: { id: string; title: string } } }
+}
+
+export function getSellerPayouts(token: string) {
+  return request<SellerPayout[]>('/api/seller/payouts', { token })
+}

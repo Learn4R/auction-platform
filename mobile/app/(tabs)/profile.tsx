@@ -116,6 +116,9 @@ function SellerStatusCard({
           <Link href="/my-listings" style={styles.secondaryLink} testID="my-listings-link">
             My Listings →
           </Link>
+          <Link href="/my-payouts" style={styles.secondaryLink} testID="my-payouts-link">
+            My Payouts →
+          </Link>
         </View>
       </View>
     )
@@ -244,6 +247,8 @@ const styles = StyleSheet.create({
   cardButtonRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
+    rowGap: 8,
     gap: 16,
   },
   primaryButton: {

@@ -81,6 +81,7 @@ export default function RootLayout() {
             <Stack.Screen name="apply-to-sell" />
             <Stack.Screen name="sell-item" />
             <Stack.Screen name="my-listings" />
+            <Stack.Screen name="my-payouts" />
             <Stack.Screen name="my-orders" />
             <Stack.Screen name="pay/[orderId]" />
           </Stack>
