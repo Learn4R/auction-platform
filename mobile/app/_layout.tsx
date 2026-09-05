@@ -63,6 +63,14 @@ export default function RootLayout() {
               headerStyle: { backgroundColor: colors.white },
               headerTintColor: colors.royal,
               headerTitleStyle: { fontFamily: fonts.displaySemiBold, fontSize: 17, color: colors.royal },
+              // Without this, iOS's back button falls back to showing the
+              // *previous* screen's route name next to the chevron — and
+              // since the (tabs) group has no title of its own, every
+              // pushed screen's back button literally read "(tabs)". A
+              // bare chevron (no label) is the cleaner fix vs. picking an
+              // arbitrary label for a back destination that's different
+              // per tab anyway.
+              headerBackButtonDisplayMode: 'minimal',
             }}
           >
             <Stack.Screen name="(tabs)" />

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useLocalSearchParams } from 'expo-router'
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { AuctionsFilterModal, activeFilterCount, EMPTY_FILTERS, type AuctionFilters } from '../../components/AuctionsFilterModal'
 import { AuctionsSortModal, SORT_OPTIONS, type SortKey } from '../../components/AuctionsSortModal'
 import { ItemCard } from '../../components/ItemCard'
@@ -75,6 +76,11 @@ export default function Auctions() {
   // alive rather than remounting them) still updates the filters.
   const { category: categoryParam, status: statusParam } = useLocalSearchParams<{ category?: string; status?: string }>()
 
+  // The tab navigator renders this screen with headerShown: false (see
+  // (tabs)/_layout.tsx), so nothing else reserves space for the status
+  // bar/notch — same fix as Home's own hero, applied here to "All Auctions".
+  const insets = useSafeAreaInsets()
+
   const [items, setItems] = useState<ItemSummary[] | null>(null)
   const [categories, setCategories] = useState<Category[]>([])
   const [filterOptions, setFilterOptions] = useState<ItemFilterOptions | null>(null)
@@ -146,7 +152,7 @@ export default function Auctions() {
       <FlatList
         testID="auctions-list"
         style={styles.container}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + 20 }]}
         data={sortedItems}
         keyExtractor={(item) => item.id}
         ItemSeparatorComponent={() => <View style={styles.separator} />}

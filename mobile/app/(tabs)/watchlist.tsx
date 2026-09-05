@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import { useFocusEffect } from 'expo-router'
 import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ItemCard } from '../../components/ItemCard'
 import { Text } from '../../components/Text'
 import { colors } from '../../constants/colors'
@@ -14,6 +15,11 @@ import { useAuth } from '../../lib/auth'
 // so unwatchlisting an item elsewhere (or right here) is reflected without
 // needing a manual pull-to-refresh.
 export default function Watchlist() {
+  // The tab navigator renders this screen with headerShown: false (see
+  // (tabs)/_layout.tsx), so nothing else reserves space for the status
+  // bar/notch — same fix as Home's own hero, applied here to the title.
+  const insets = useSafeAreaInsets()
+
   const { token } = useAuth()
   const [items, setItems] = useState<ItemSummary[] | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -49,7 +55,7 @@ export default function Watchlist() {
     <FlatList
       testID="watchlist-list"
       style={styles.container}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingTop: insets.top + 20 }]}
       data={items}
       keyExtractor={(item) => item.id}
       ItemSeparatorComponent={() => <View style={styles.separator} />}

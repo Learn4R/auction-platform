@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { router } from 'expo-router'
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Text } from '../../components/Text'
 import { colors } from '../../constants/colors'
 import { getAllNotifications, markNotificationRead as apiMarkNotificationRead, type AppNotification, type PaginatedNotifications } from '../../lib/api'
@@ -14,6 +15,11 @@ import { useNotifications } from '../../lib/notifications'
 // that arrives while viewing page 1 is spliced straight into the list
 // instead of waiting for a manual refresh.
 export default function Notifications() {
+  // The tab navigator renders this screen with headerShown: false (see
+  // (tabs)/_layout.tsx), so nothing else reserves space for the status
+  // bar/notch — same fix as Home's own hero, applied here to the title.
+  const insets = useSafeAreaInsets()
+
   const { token } = useAuth()
   const { notifications: liveNotifications, markRead } = useNotifications()
   const [page, setPage] = useState(1)
@@ -85,7 +91,7 @@ export default function Notifications() {
     <FlatList
       testID="notifications-list"
       style={styles.container}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingTop: insets.top + 20 }]}
       data={data.notifications}
       keyExtractor={(n) => n.id}
       renderItem={({ item: n }) => (

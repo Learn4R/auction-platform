@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import { Link, router, useFocusEffect } from 'expo-router'
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Text } from '../../components/Text'
 import { colors } from '../../constants/colors'
 import { fonts } from '../../constants/fonts'
@@ -14,6 +15,11 @@ import { useAuth } from '../../lib/auth'
 // pending → under-review message only, rejected → reason + Reapply,
 // approved → Sell an Item + My Listings.
 export default function Profile() {
+  // The tab navigator renders this screen with headerShown: false (see
+  // (tabs)/_layout.tsx), so nothing else reserves space for the status
+  // bar/notch — same fix as Home's own hero, applied here to the greeting.
+  const insets = useSafeAreaInsets()
+
   const { user, token, logout } = useAuth()
   const [profile, setProfile] = useState<MyProfile | null>(null)
   const [sellerInfo, setSellerInfo] = useState<MySellerApplication | null>(null)
@@ -32,7 +38,11 @@ export default function Profile() {
   )
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content} testID="profile-screen">
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={[styles.content, { paddingTop: insets.top + 20 }]}
+      testID="profile-screen"
+    >
       <View style={styles.header}>
         <Text variant="display" style={styles.greeting} testID="profile-greeting">
           Logged in as {user?.name}
