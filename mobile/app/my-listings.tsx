@@ -15,9 +15,13 @@ import { formatCurrency, formatDateTime } from '../lib/format'
 // on-brand prompt instead of the raw server string.
 const NOT_A_SELLER_ERROR = 'Insufficient permissions'
 
-// A simple list of the seller's own submitted items with their real
-// status — proves submission + status tracking work end to end. No
-// edit/resubmit yet, that's a reasonable next phase (per the brief).
+// A list of the seller's own submitted items with their real status.
+// Rejected/changes-requested items can be edited and resubmitted from here —
+// sell-item.tsx (in edit mode) shows its own confirmation and pops back to
+// this exact screen instance (router.back(), not a fresh navigation) once
+// that succeeds. The list itself always reflects the real current status
+// since useFocusEffect refetches every time this screen regains focus,
+// including on that return.
 export default function MyListings() {
   const { token } = useAuth()
   const [items, setItems] = useState<ItemSubmission[] | null>(null)
@@ -123,6 +127,15 @@ function ListingRow({ item }: { item: ItemSubmission }) {
           <Text style={styles.changesText}>{item.changesRequestedNote}</Text>
         </View>
       )}
+
+      {(item.status === 'rejected' || item.status === 'changes_requested') && (
+        <Pressable
+          onPress={() => router.push({ pathname: '/sell-item', params: { editId: item.id } })}
+          testID={`my-listing-edit-${item.id}`}
+        >
+          <Text style={styles.editLink}>Edit & Resubmit →</Text>
+        </Pressable>
+      )}
     </View>
   )
 }
@@ -212,6 +225,11 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     color: '#8a6e18',
     marginTop: 2,
+  },
+  editLink: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.royal,
   },
   center: {
     flex: 1,

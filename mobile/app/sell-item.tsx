@@ -1,13 +1,22 @@
 import { useEffect, useState } from 'react'
-import { router, Stack } from 'expo-router'
+import { router, Stack, useLocalSearchParams } from 'expo-router'
 import * as ImagePicker from 'expo-image-picker'
 import { Image } from 'expo-image'
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native'
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { DateTimeField } from '../components/DateTimeField'
 import { Text } from '../components/Text'
 import { TextInput } from '../components/TextInput'
 import { colors } from '../constants/colors'
-import { getCategories, submitItem, type Category, type ItemImagePick } from '../lib/api'
+import {
+  getCategories,
+  getMyItems,
+  resubmitItem,
+  submitItem,
+  updateItem,
+  type Category,
+  type ItemImagePick,
+  type ItemSubmission,
+} from '../lib/api'
 import { useAuth } from '../lib/auth'
 
 const MAX_IMAGES = 6
@@ -37,6 +46,51 @@ const emptyForm = {
 
 type Form = typeof emptyForm
 
+// A photo already on the item (identified by its uploaded URL, kept via
+// keepImageUrls on submit) vs one newly picked on this screen (uploaded
+// fresh). Only relevant in edit mode — a brand-new submission's images are
+// all 'new'. Web's Sell.tsx uses the same existing/new split for the same
+// reason: the server needs to know which existing photos to keep vs delete,
+// separately from which new files to upload.
+type Photo = { kind: 'existing'; url: string } | { kind: 'new'; pick: ItemImagePick }
+
+function photoUri(photo: Photo): string {
+  return photo.kind === 'existing' ? photo.url : photo.pick.uri
+}
+
+function isNewPhoto(photo: Photo): photo is Extract<Photo, { kind: 'new' }> {
+  return photo.kind === 'new'
+}
+
+function isExistingPhoto(photo: Photo): photo is Extract<Photo, { kind: 'existing' }> {
+  return photo.kind === 'existing'
+}
+
+function formFromItem(item: ItemSubmission): Form {
+  return {
+    categoryId: item.category?.id ?? '',
+    title: item.title ?? '',
+    year: item.year !== null ? String(item.year) : '',
+    denomination: item.denomination ?? '',
+    mint: item.mint ?? '',
+    rulerAuthority: item.rulerAuthority ?? '',
+    period: item.period ?? '',
+    material: item.material ?? '',
+    weight: item.weight ?? '',
+    diameter: item.diameter ?? '',
+    description: item.description ?? '',
+    condition: item.condition ?? '',
+    grade: item.grade ?? '',
+    certificateNumber: item.certificateNumber ?? '',
+    gradingCompany: item.gradingCompany ?? '',
+    provenance: item.provenance ?? '',
+    startingBid: item.proposedStartingBid ?? '',
+    bidIncrement: item.proposedBidIncrement ?? '',
+    startTime: item.proposedStartTime ?? '',
+    endTime: item.proposedEndTime ?? '',
+  }
+}
+
 function assetToImagePick(asset: ImagePicker.ImagePickerAsset, index: number): ItemImagePick {
   const ext = asset.mimeType?.split('/')[1] ?? 'jpg'
   return {
@@ -50,7 +104,7 @@ function assetToImagePick(asset: ImagePicker.ImagePickerAsset, index: number): I
   }
 }
 
-function validate(form: Form, images: ItemImagePick[]): string | null {
+function validate(form: Form, images: Photo[]): string | null {
   if (!form.categoryId) return 'Please choose a category.'
   if (!form.title.trim()) return 'Title is required.'
   if (!form.description.trim()) return 'Description is required.'
@@ -68,15 +122,24 @@ function validate(form: Form, images: ItemImagePick[]): string | null {
 // final "Submit for Review" step calls — just as a single scrollable form
 // instead of a multi-step wizard, per this phase's brief. Approved sellers
 // only; the server itself also enforces this (403 otherwise).
+//
+// Edit mode (?editId=<id>) reuses this exact same form/state instead of a
+// second screen — the item's current data (including its existing photos,
+// as 'existing'-kind Photos) is loaded once via getMyItems and used to seed
+// `form`/`images`, then submit calls updateItem + resubmitItem instead of
+// submitItem. Mirrors client/src/pages/Sell.tsx's isEditing branch.
 export default function SellItem() {
+  const { editId } = useLocalSearchParams<{ editId?: string }>()
   const { token } = useAuth()
   const [categories, setCategories] = useState<Category[]>([])
   const [form, setForm] = useState<Form>(emptyForm)
-  const [images, setImages] = useState<ItemImagePick[]>([])
+  const [images, setImages] = useState<Photo[]>([])
   const [imageError, setImageError] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [submittedTitle, setSubmittedTitle] = useState<string | null>(null)
+  const [loadingEditItem, setLoadingEditItem] = useState(!!editId)
+  const [editItemNotFound, setEditItemNotFound] = useState(false)
 
   useEffect(() => {
     getCategories()
@@ -86,6 +149,25 @@ export default function SellItem() {
       })
       .catch(() => {})
   }, [])
+
+  // There's no single-item-by-id endpoint for sellers, so this re-fetches
+  // the whole list and finds the one being edited — the same data
+  // my-listings.tsx just displayed, one screen back.
+  useEffect(() => {
+    if (!editId || !token) return
+    getMyItems(token)
+      .then((items) => {
+        const item = items.find((i) => i.id === editId)
+        if (!item) {
+          setEditItemNotFound(true)
+          return
+        }
+        setForm(formFromItem(item))
+        setImages(item.images.map((url): Photo => ({ kind: 'existing', url })))
+      })
+      .catch(() => setEditItemNotFound(true))
+      .finally(() => setLoadingEditItem(false))
+  }, [editId, token])
 
   function update<K extends keyof Form>(key: K, value: Form[K]) {
     setForm((f) => ({ ...f, [key]: value }))
@@ -97,7 +179,10 @@ export default function SellItem() {
       setImageError(`You can upload up to ${MAX_IMAGES} images (${images.length} already added).`)
       return
     }
-    setImages((prev) => [...prev, ...assets.map((a, i) => assetToImagePick(a, prev.length + i))])
+    setImages((prev) => [
+      ...prev,
+      ...assets.map((a, i): Photo => ({ kind: 'new', pick: assetToImagePick(a, prev.length + i) })),
+    ])
   }
 
   // On native, permission must be requested and awaited before launching.
@@ -154,59 +239,108 @@ export default function SellItem() {
     setError(null)
     setSubmitting(true)
     try {
-      const item = await submitItem(
-        {
-          title: form.title,
-          description: form.description,
-          categoryId: form.categoryId,
-          year: form.year ? Number(form.year) : null,
-          material: form.material,
-          condition: form.condition,
-          denomination: form.denomination,
-          mint: form.mint,
-          rulerAuthority: form.rulerAuthority,
-          period: form.period,
-          weight: form.weight,
-          diameter: form.diameter,
-          grade: form.grade,
-          certificateNumber: form.certificateNumber,
-          gradingCompany: form.gradingCompany,
-          provenance: form.provenance,
-          images,
-          startingBid: Number(form.startingBid),
-          bidIncrement: Number(form.bidIncrement),
-          startTime: new Date(form.startTime).toISOString(),
-          endTime: new Date(form.endTime).toISOString(),
-        },
-        token,
-      )
+      const fields = {
+        title: form.title,
+        description: form.description,
+        categoryId: form.categoryId,
+        year: form.year ? Number(form.year) : null,
+        material: form.material,
+        condition: form.condition,
+        denomination: form.denomination,
+        mint: form.mint,
+        rulerAuthority: form.rulerAuthority,
+        period: form.period,
+        weight: form.weight,
+        diameter: form.diameter,
+        grade: form.grade,
+        certificateNumber: form.certificateNumber,
+        gradingCompany: form.gradingCompany,
+        provenance: form.provenance,
+        images: images.filter(isNewPhoto).map((p) => p.pick),
+        startingBid: Number(form.startingBid),
+        bidIncrement: Number(form.bidIncrement),
+        startTime: new Date(form.startTime).toISOString(),
+        endTime: new Date(form.endTime).toISOString(),
+      }
+
+      if (editId) {
+        const keepImageUrls = images.filter(isExistingPhoto).map((p) => p.url)
+        await updateItem(editId, { ...fields, keepImageUrls }, token)
+        const result = await resubmitItem(editId, token)
+        setSubmittedTitle(result.title ?? form.title)
+        return
+      }
+
+      const item = await submitItem(fields, token)
       setSubmittedTitle(item.title)
       setForm({ ...emptyForm, categoryId: categories[0]?.id ?? '' })
       setImages([])
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Submission failed')
+      setError(err instanceof Error ? err.message : editId ? 'Resubmission failed' : 'Submission failed')
     } finally {
       setSubmitting(false)
     }
   }
 
+  const isEditing = !!editId
+  const screenTitle = isEditing ? 'Edit & Resubmit Item' : 'Sell an Item'
+
+  // Edit-and-resubmit is reached by pushing this screen on top of My
+  // Listings, so returning there is a plain stack pop — guaranteed to land
+  // back on that exact existing instance (which shows the item's new
+  // 'submitted' status via its own refetch-on-focus) rather than risking a
+  // duplicate via a fresh navigation. Briefly show the confirmation above,
+  // then pop back.
+  useEffect(() => {
+    if (!isEditing || !submittedTitle) return
+    const timer = setTimeout(() => router.back(), 1400)
+    return () => clearTimeout(timer)
+  }, [isEditing, submittedTitle])
+
+  if (loadingEditItem) {
+    return (
+      <>
+        <Stack.Screen options={{ headerShown: true, title: screenTitle }} />
+        <View style={styles.center} testID="sell-item-loading">
+          <ActivityIndicator color={colors.royal} />
+        </View>
+      </>
+    )
+  }
+
+  if (editItemNotFound) {
+    return (
+      <>
+        <Stack.Screen options={{ headerShown: true, title: screenTitle }} />
+        <View style={styles.center} testID="sell-item-not-found">
+          <Text style={styles.errorText}>This listing couldn&apos;t be found.</Text>
+          <Pressable onPress={() => router.replace('/my-listings')}>
+            <Text style={styles.notFoundLink}>Back to My Listings →</Text>
+          </Pressable>
+        </View>
+      </>
+    )
+  }
+
   return (
     <>
-      <Stack.Screen options={{ headerShown: true, title: 'Sell an Item' }} />
+      <Stack.Screen options={{ headerShown: true, title: screenTitle }} />
       <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.content} testID="sell-item-form">
           <Text style={styles.intro}>
-            Submit a lot for review. Once approved by our team, it goes live for bidding with the auction settings
-            you propose below.
+            {isEditing
+              ? 'Update your listing to address the feedback below, then resubmit it for review.'
+              : 'Submit a lot for review. Once approved by our team, it goes live for bidding with the auction settings you propose below.'}
           </Text>
 
           {submittedTitle && (
             <View style={styles.successBox} testID="sell-item-success">
               <Text style={styles.successText}>
-                <Text style={styles.successBold}>{submittedTitle}</Text> was submitted and is now pending review.
+                <Text style={styles.successBold}>{submittedTitle}</Text>{' '}
+                {isEditing ? 'was resubmitted and is now pending review.' : 'was submitted and is now pending review.'}
               </Text>
-              <Pressable onPress={() => router.replace('/my-listings')}>
-                <Text style={styles.successLink}>View My Listings →</Text>
+              <Pressable onPress={() => (isEditing ? router.back() : router.replace('/my-listings'))}>
+                <Text style={styles.successLink}>{isEditing ? 'Back to My Listings →' : 'View My Listings →'}</Text>
               </Pressable>
             </View>
           )}
@@ -281,8 +415,8 @@ export default function SellItem() {
           </Text>
           <View style={styles.thumbRow} testID="sell-item-images">
             {images.map((img, i) => (
-              <View key={img.uri} style={styles.thumbWrap}>
-                <Image source={{ uri: img.uri }} style={styles.thumb} contentFit="cover" testID={`sell-item-thumb-${i}`} />
+              <View key={photoUri(img)} style={styles.thumbWrap}>
+                <Image source={{ uri: photoUri(img) }} style={styles.thumb} contentFit="cover" testID={`sell-item-thumb-${i}`} />
                 <Pressable style={styles.removeThumb} onPress={() => removeImage(i)} testID={`sell-item-remove-image-${i}`}>
                   <Text style={styles.removeThumbText}>×</Text>
                 </Pressable>
@@ -373,7 +507,9 @@ export default function SellItem() {
             disabled={submitting}
             testID="sell-item-submit"
           >
-            <Text style={styles.submitButtonText}>{submitting ? 'Submitting…' : 'Submit for Review'}</Text>
+            <Text style={styles.submitButtonText}>
+              {submitting ? (isEditing ? 'Resubmitting…' : 'Submitting…') : isEditing ? 'Resubmit for Review' : 'Submit for Review'}
+            </Text>
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -394,6 +530,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.ivory,
+  },
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.ivory,
+    padding: 24,
+    gap: 8,
+  },
+  notFoundLink: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.royal,
   },
   content: {
     padding: 20,

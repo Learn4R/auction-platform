@@ -336,8 +336,7 @@ export interface ItemSubmissionInput {
   endTime: string
 }
 
-export function submitItem(data: ItemSubmissionInput, token: string) {
-  const form = new FormData()
+function appendItemFields(form: FormData, data: ItemSubmissionInput) {
   form.append('title', data.title)
   form.append('description', data.description)
   form.append('categoryId', data.categoryId)
@@ -358,7 +357,10 @@ export function submitItem(data: ItemSubmissionInput, token: string) {
   form.append('bidIncrement', String(data.bidIncrement))
   form.append('startTime', data.startTime)
   form.append('endTime', data.endTime)
-  for (const img of data.images) {
+}
+
+function appendItemImages(form: FormData, images: ItemImagePick[]) {
+  for (const img of images) {
     if (img.webFile) {
       form.append('images', img.webFile, img.name)
     } else {
@@ -368,7 +370,38 @@ export function submitItem(data: ItemSubmissionInput, token: string) {
       form.append('images', { uri: img.uri, name: img.name, type: img.type })
     }
   }
+}
+
+export function submitItem(data: ItemSubmissionInput, token: string) {
+  const form = new FormData()
+  appendItemFields(form, data)
+  appendItemImages(form, data.images)
   return request<ItemSubmission>('/api/items', { method: 'POST', token, body: form })
+}
+
+// Edit a listing that's still editable (draft, rejected, or changes_requested
+// — see server/src/routes/seller.ts's EDITABLE_STATUSES). `images` here means
+// only the newly-added photos; `keepImageUrls` tells the server which of the
+// item's existing photos to retain — anything already on the item but not
+// listed gets deleted. This does NOT change the item's status; call
+// resubmitItem after a successful edit to move it back to 'submitted'.
+export interface ItemEditInput extends ItemSubmissionInput {
+  keepImageUrls: string[]
+}
+
+export function updateItem(id: string, data: ItemEditInput, token: string) {
+  const form = new FormData()
+  appendItemFields(form, data)
+  form.append('keepImages', JSON.stringify(data.keepImageUrls))
+  appendItemImages(form, data.images)
+  return request<ItemSubmission>(`/api/seller/items/${id}`, { method: 'PATCH', token, body: form })
+}
+
+// Moves a draft, rejected, or changes-requested listing to 'submitted' and
+// clears rejectionReason/changesRequestedNote. The item must already have
+// every required field filled in (via updateItem) before this succeeds.
+export function resubmitItem(id: string, token: string) {
+  return request<ItemSubmission>(`/api/seller/items/${id}/resubmit`, { method: 'POST', token })
 }
 
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded'
